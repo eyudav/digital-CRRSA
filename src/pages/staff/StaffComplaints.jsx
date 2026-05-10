@@ -1,0 +1,75 @@
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { PageHeader } from "@/components/AppShell";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { format } from "date-fns";
+import { toast } from "@/hooks/use-toast";
+import { apiJson } from "@/lib/api";
+import { complaintApiToUi, complaintUiToApi } from "@/lib/statusMap";
+const TONE = {
+    pending: "bg-warning/15 text-warning-foreground",
+    in_progress: "bg-info/10 text-info",
+    resolved: "bg-success/10 text-success",
+};
+const StaffComplaints = () => {
+    const qc = useQueryClient();
+    const [responses, setResponses] = useState({});
+    const { data: rows = [] } = useQuery({
+        queryKey: ["complaints", "staff"],
+        queryFn: () => apiJson("/api/complaints"),
+    });
+    const list = rows.map((c) => ({
+        id: String(c.id),
+        citizenName: c.citizen_name || "",
+        subject: c.category,
+        message: c.message,
+        status: complaintApiToUi(c.status),
+        response: c.resolution_comment,
+        createdAt: c.created_at,
+    }));
+    const patchMutation = useMutation({
+        mutationFn: ({ id, statusUi, resolutionComment }) =>
+            apiJson(`/api/complaints/${id}/status`, {
+                method: "PATCH",
+                body: {
+                    status: complaintUiToApi(statusUi),
+                    resolutionComment: resolutionComment || undefined,
+                },
+            }),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ["complaints", "staff"] });
+            qc.invalidateQueries({ queryKey: ["complaints", "my"] });
+            toast({ title: "Complaint updated" });
+        },
+        onError: (e) => toast({ title: "Update failed", description: e.message, variant: "destructive" }),
+    });
+    const respond = (id, statusUi) => {
+        const resolutionComment = responses[id];
+        patchMutation.mutate({ id, statusUi, resolutionComment });
+    };
+    return (<>
+      <PageHeader title="Complaints" description="Respond to citizen feedback and track resolution status."/>
+      <div className="space-y-3">
+        {list.length === 0 ? <p className="text-sm text-muted-foreground">No complaints yet.</p> : list.map((c) => (<article key={c.id} className="rounded-2xl border border-border bg-card p-5 shadow-soft">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="font-display text-base font-semibold">{c.subject}</h3>
+                <p className="text-xs text-muted-foreground">{c.citizenName} · {format(new Date(c.createdAt), "MMM d, yyyy")}</p>
+              </div>
+              <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-[0.14em] ${TONE[c.status]}`}>{c.status.replace("_", " ")}</span>
+            </div>
+            <p className="mt-3 text-sm">{c.message}</p>
+            {c.response && <div className="mt-3 rounded-lg bg-secondary/50 p-3 text-sm"><span className="font-medium">Response:</span> {c.response}</div>}
+            {c.status !== "resolved" && (<div className="mt-4 space-y-2">
+                <Textarea rows={2} placeholder="Write a response..." value={responses[c.id] || ""} onChange={(e) => setResponses({ ...responses, [c.id]: e.target.value })}/>
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" size="sm" onClick={() => respond(c.id, "in_progress")} disabled={patchMutation.isPending}>Mark in progress</Button>
+                  <Button size="sm" className="bg-success text-success-foreground hover:bg-success/90" onClick={() => respond(c.id, "resolved")} disabled={patchMutation.isPending}>Resolve</Button>
+                </div>
+              </div>)}
+          </article>))}
+      </div>
+    </>);
+};
+export default StaffComplaints;

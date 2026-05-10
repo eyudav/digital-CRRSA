@@ -1,0 +1,117 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Digital CRRSA design system - Modern civic (emerald + cream)
+   All colors MUST be HSL. */
+
+@layer base {
+  :root {
+    /* Surfaces */
+    --background: 40 33% 96%;            /* warm cream */
+    --foreground: 165 35% 10%;           /* deep forest ink */
+
+    --card: 0 0% 100%;
+    --card-foreground: 165 35% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 165 35% 10%;
+
+    /* Brand */
+    --primary: 158 64% 22%;              /* deep emerald */
+    --primary-foreground: 40 33% 97%;
+    --primary-glow: 152 55% 38%;
+
+    --secondary: 40 30% 92%;
+    --secondary-foreground: 165 35% 14%;
+
+    --muted: 40 25% 90%;
+    --muted-foreground: 165 12% 38%;
+
+    --accent: 38 78% 52%;                /* warm gold accent */
+    --accent-foreground: 165 40% 12%;
+
+    --destructive: 0 72% 45%;
+    --destructive-foreground: 0 0% 98%;
+
+    --success: 152 55% 38%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 165 40% 12%;
+    --info: 200 80% 38%;
+    --info-foreground: 0 0% 100%;
+
+    --border: 40 18% 84%;
+    --input: 40 18% 86%;
+    --ring: 158 64% 22%;
+
+    --radius: 0.75rem;
+
+    /* Gradients & shadows */
+    --gradient-hero: radial-gradient(ellipse at top left, hsl(158 64% 22% / 0.95), hsl(165 55% 14%) 60%, hsl(165 50% 10%));
+    --gradient-emerald: linear-gradient(135deg, hsl(158 64% 22%), hsl(152 55% 38%));
+    --gradient-cream: linear-gradient(180deg, hsl(40 33% 97%), hsl(40 28% 92%));
+    --shadow-elegant: 0 20px 50px -25px hsl(158 64% 22% / 0.35);
+    --shadow-soft: 0 6px 24px -12px hsl(165 35% 10% / 0.18);
+    --shadow-ring: 0 0 0 4px hsl(158 64% 22% / 0.12);
+
+    --transition-base: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Sidebar */
+    --sidebar-background: 165 50% 10%;
+    --sidebar-foreground: 40 30% 92%;
+    --sidebar-primary: 38 78% 52%;
+    --sidebar-primary-foreground: 165 50% 10%;
+    --sidebar-accent: 165 40% 16%;
+    --sidebar-accent-foreground: 40 33% 96%;
+    --sidebar-border: 165 35% 18%;
+    --sidebar-ring: 38 78% 52%;
+  }
+
+  .dark {
+    --background: 165 45% 8%;
+    --foreground: 40 30% 94%;
+    --card: 165 40% 11%;
+    --card-foreground: 40 30% 94%;
+    --popover: 165 40% 11%;
+    --popover-foreground: 40 30% 94%;
+    --primary: 152 55% 45%;
+    --primary-foreground: 165 50% 8%;
+    --secondary: 165 35% 16%;
+    --secondary-foreground: 40 30% 94%;
+    --muted: 165 30% 15%;
+    --muted-foreground: 40 15% 70%;
+    --accent: 38 78% 55%;
+    --accent-foreground: 165 50% 10%;
+    --destructive: 0 65% 50%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 165 30% 18%;
+    --input: 165 30% 18%;
+    --ring: 152 55% 45%;
+  }
+}
+
+@layer base {
+  * { @apply border-border; }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', system-ui, sans-serif;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+  h1, h2, h3, .font-display {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+}
+
+@layer utilities {
+  .bg-hero { background-image: var(--gradient-hero); }
+  .bg-emerald-grad { background-image: var(--gradient-emerald); }
+  .bg-cream-grad { background-image: var(--gradient-cream); }
+  .shadow-elegant { box-shadow: var(--shadow-elegant); }
+  .shadow-soft { box-shadow: var(--shadow-soft); }
+  .text-balance { text-wrap: balance; }
+}
