@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, ClipboardList, FileCheck2, Users, Clock } from "lucide-react";
 import { PageHeader } from "@/components/AppShell";
 import { StatusBadge } from "@/components/StatusBadge";
+import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { useAuth } from "@/context/AuthContext";
 import { apiJson } from "@/lib/api";
@@ -10,9 +11,10 @@ import { mapStaffSearchRow } from "@/lib/applicationMap";
 import { complaintApiToUi } from "@/lib/statusMap";
 const StaffDashboard = () => {
     const { user } = useAuth();
-    const { data: searchRows = [] } = useQuery({
-        queryKey: ["staff", "applications", "search"],
+    const { data: searchRows = [], isLoading, isError, error, refetch } = useQuery({
+        queryKey: ["staff", "applications", "search", "%"],
         queryFn: () => apiJson(`/api/records/search?q=${encodeURIComponent("%")}`),
+        refetchOnWindowFocus: true,
     });
     const apps = searchRows.map(mapStaffSearchRow);
     const { data: complaintsRaw = [] } = useQuery({
@@ -23,10 +25,14 @@ const StaffDashboard = () => {
         ...c,
         statusUi: complaintApiToUi(c.status),
     }));
-    const pending = apps.filter((a) => ["submitted", "under_review", "additional_documents_required"].includes(a.status));
+    const pending = apps.filter((a) =>
+        ["submitted", "under_review", "additional_documents_required", "approved"].includes(a.status)
+    );
     const today = new Date().toISOString().slice(0, 10);
     const todayCount = apps.filter((a) => a.appointment?.date === today).length;
-    const approvedThisWeek = apps.filter((a) => a.status === "approved" || a.status === "ready_for_collection").length;
+    const approvedThisWeek = apps.filter((a) =>
+        ["approved", "scheduled", "ready_for_collection"].includes(a.status)
+    ).length;
     const kpis = [
         { label: "Awaiting review", value: pending.length, icon: ClipboardList, tone: "bg-warning/15 text-warning-foreground" },
         { label: "Today's appointments", value: todayCount, icon: Clock, tone: "bg-info/10 text-info" },
@@ -35,6 +41,16 @@ const StaffDashboard = () => {
     ];
     return (<>
       <PageHeader eyebrow={`Officer · ${user?.fullName.split(" ")[0]}`} title="Operations overview" description="Triage incoming applications, manage today's queue and respond to citizens quickly."/>
+
+      {isLoading && <p className="text-sm text-muted-foreground">Loading overview…</p>}
+      {isError && (
+        <div className="mb-4 rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+          {error?.message || "Could not load applications."}{" "}
+          <Button variant="outline" size="sm" className="ml-2 align-middle" onClick={() => refetch()}>
+            Retry
+          </Button>
+        </div>
+      )}
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {kpis.map((k) => (<div key={k.label} className="rounded-2xl border border-border bg-card p-5 shadow-soft">

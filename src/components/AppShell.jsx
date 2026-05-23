@@ -25,24 +25,30 @@ const CITIZEN_NAV = [
     { to: "/citizen/announcements", label: "Announcements", icon: Megaphone },
     { to: "/citizen/complaints", label: "Complaints", icon: MessageSquareWarning },
     { to: "/citizen/certificates", label: "My certificates", icon: ScrollText },
+    { to: "/citizen/settings", label: "Settings", icon: Settings },
 ];
 const STAFF_NAV = [
     { to: "/staff", label: "Dashboard", icon: LayoutDashboard, end: true },
     { to: "/staff/queue", label: "Review queue", icon: Inbox },
+    { to: "/staff/announcements", label: "Announcements", icon: Megaphone },
     { to: "/staff/settings", label: "Settings", icon: Settings },
 ];
 const ADMIN_NAV = [
-    { to: "/staff", label: "Dashboard", icon: LayoutDashboard, end: true },
-    { to: "/staff/queue", label: "Review queue", icon: Inbox },
-    { to: "/staff/announcements", label: "Announcements", icon: Megaphone },
     { to: "/staff/complaints", label: "Complaints", icon: MessageSquareWarning },
     { to: "/staff/settings", label: "Settings", icon: Settings },
     { to: "/staff/admin/users", label: "User management", icon: Settings },
 ];
+const SUPER_ADMIN_NAV = [
+    { to: "/super-admin", label: "Super Admin Home", icon: LayoutDashboard, end: true },
+    { to: "/staff/admin/users", label: "Manage users", icon: Settings },
+    { to: "/super-admin/settings", label: "System Settings", icon: Settings },
+    { to: "/super-admin/logs", label: "System Logs", icon: FileText },
+    { to: "/staff/queue", label: "Platform Access", icon: Inbox },
+];
 export function AppShell() {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
-    const nav = user?.role === "citizen" ? CITIZEN_NAV : user?.role === "staff" ? STAFF_NAV : ADMIN_NAV;
+    const nav = user?.role === "citizen" ? CITIZEN_NAV : user?.role === "super_admin" ? SUPER_ADMIN_NAV : user?.role === "staff" ? STAFF_NAV : ADMIN_NAV;
     const { data: notifications = [] } = useQuery({
         queryKey: ["notifications", "my", user?.id],
         queryFn: () => apiJson("/api/notifications/my"),

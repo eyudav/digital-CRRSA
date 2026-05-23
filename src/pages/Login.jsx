@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { useAuth } from "@/context/AuthContext";
@@ -8,8 +8,9 @@ import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/Logo";
 import { toast } from "@/hooks/use-toast";
 import { ShieldCheck } from "lucide-react";
+import { apiJson } from "@/lib/api";
 const schema = z.object({
-    email: z.string().trim().email("Enter a valid email").max(255),
+    email: z.string().trim().min(1, "Enter a valid email or username").max(255),
     password: z.string().min(8, "At least 8 characters").max(100),
 });
 const Login = () => {
@@ -19,6 +20,13 @@ const Login = () => {
     const [password, setPassword] = useState("");
     const [errors, setErrors] = useState({});
     const [submitting, setSubmitting] = useState(false);
+    const [resending, setResending] = useState(false);
+    useEffect(() => {
+        const p = new URLSearchParams(window.location.search);
+        if (p.get("verified") === "1") {
+            toast({ title: "Email verified", description: "Your account is now verified. Please sign in." });
+        }
+    }, []);
     const onSubmit = async (e) => {
         e.preventDefault();
         const parsed = schema.safeParse({ email, password });
@@ -36,12 +44,34 @@ const Login = () => {
             return;
         }
         toast({ title: "Welcome back" });
-        const dest = ["staff", "admin", "super_admin"].includes(res.user?.role) ? "/staff" : "/citizen";
+        const dest = res.user?.role === "super_admin"
+            ? "/super-admin"
+            : res.user?.role === "admin"
+                ? "/staff/admin/users"
+                : res.user?.role === "staff"
+                    ? "/staff"
+                    : "/citizen";
         nav(dest);
     };
-    const fillDemo = (kind) => {
-        setEmail(kind === "citizen" ? "citizen@crrsa.gov" : "staff@crrsa.gov");
-        setPassword("demo1234");
+    const resendVerification = async () => {
+        if (!email.trim()) {
+            toast({ title: "Email required", description: "Enter your email first.", variant: "destructive" });
+            return;
+        }
+        setResending(true);
+        try {
+            const out = await apiJson("/api/auth/resend-verification", {
+                method: "POST",
+                body: { email },
+            });
+            toast({ title: "Verification email", description: out?.message || "Verification email sent." });
+        }
+        catch (e) {
+            toast({ title: "Failed", description: e.message, variant: "destructive" });
+        }
+        finally {
+            setResending(false);
+        }
     };
     return (<div className="grid min-h-screen lg:grid-cols-2">
       <div className="hidden flex-col justify-between bg-hero p-12 text-primary-foreground lg:flex">
@@ -65,7 +95,7 @@ const Login = () => {
           <form onSubmit={onSubmit} className="mt-8 space-y-5">
             <div className="space-y-1.5">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com"/>
+              <Input id="email" type="text" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Username or email"/>
               {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
             </div>
             <div className="space-y-1.5">
@@ -74,16 +104,10 @@ const Login = () => {
               {errors.password && <p className="text-xs text-destructive">{errors.password}</p>}
             </div>
             <Button type="submit" disabled={submitting} className="w-full bg-primary text-primary-foreground hover:bg-primary/90">Sign in</Button>
+            <Button type="button" variant="outline" onClick={resendVerification} disabled={resending} className="w-full">
+              Resend verification email
+            </Button>
           </form>
-
-          <div className="mt-6 rounded-xl border border-dashed border-border bg-secondary/40 p-4">
-            <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">Demo accounts</p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              <Button type="button" variant="outline" size="sm" onClick={() => fillDemo("citizen")}>Citizen demo</Button>
-              <Button type="button" variant="outline" size="sm" onClick={() => fillDemo("staff")}>Staff demo</Button>
-            </div>
-            <p className="mt-2 text-xs text-muted-foreground">Password for both: <span className="font-mono">demo1234</span></p>
-          </div>
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
             Don't have an account? <Link to="/register" className="font-medium text-primary hover:underline">Register</Link>

@@ -27,6 +27,12 @@ export async function apiFetch(path, options = {}) {
     }
   })() : null;
   if (!res.ok) {
+    if (res.status === 401) {
+      setToken(null);
+      localStorage.removeItem("crrsa-session-v3");
+      window.location.href = "/login";
+      return;
+    }
     const msg = data?.message || data?.error || res.statusText || "Request failed";
     const err = new Error(typeof msg === "string" ? msg : JSON.stringify(msg));
     err.status = res.status;

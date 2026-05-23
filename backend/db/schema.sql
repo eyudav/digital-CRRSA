@@ -16,6 +16,7 @@ create table if not exists applications (
   office_code text not null,
   form_data jsonb not null default '{}'::jsonb,
   status text not null default 'Submitted',
+  document_upload_status text not null default 'NOT_UPLOADED',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -95,24 +96,34 @@ create index if not exists idx_notifications_user on notifications(user_id);
 create index if not exists idx_appointments_slot on appointments(slot_id);
 
 alter table application_documents add column if not exists verified boolean not null default false;
+alter table application_documents add column if not exists cloudinary_secure_url text;
+alter table application_documents add column if not exists cloudinary_public_id text;
+alter table application_documents add column if not exists cloudinary_format text;
+alter table application_documents add column if not exists original_file_name text;
+alter table application_documents add column if not exists original_file text;
+alter table application_documents add column if not exists uploaded_at timestamptz not null default now();
+update application_documents
+set original_file_name = file_name
+where original_file_name is null;
+update application_documents
+set original_file = coalesce(original_file_name, file_name)
+where original_file is null;
+update application_documents
+set cloudinary_secure_url = file_path
+where cloudinary_secure_url is null and file_path ilike 'https://res.cloudinary.com/%';
+alter table users drop constraint if exists users_subcity_required;
+alter table users add constraint users_subcity_required check (coalesce(trim(sub_city), '') <> '') not valid;
+alter table users drop constraint if exists users_phone_required;
+alter table users add constraint users_phone_required check (coalesce(trim(phone), '') <> '') not valid;
 alter table announcements add column if not exists category text not null default 'general';
+alter table announcements add column if not exists published boolean not null default true;
 alter table users add column if not exists sub_city text;
 alter table users add column if not exists woreda text;
 alter table users add column if not exists phone text;
 alter table users add column if not exists address text;
-alter table users add column if not exists email_verified boolean not null default true;
 alter table users add column if not exists is_active boolean not null default true;
 alter table users drop constraint if exists users_role_check;
 alter table users add constraint users_role_check check (role in ('super_admin', 'admin', 'staff', 'citizen'));
-
-create table if not exists email_verification_tokens (
-  id bigserial primary key,
-  user_id bigint not null references users(id) on delete cascade,
-  token text not null unique,
-  expires_at timestamptz not null,
-  used_at timestamptz,
-  created_at timestamptz not null default now()
-);
 
 create table if not exists audit_logs (
   id bigserial primary key,
@@ -129,14 +140,7 @@ create table if not exists citizen_profiles (
   user_id bigint not null unique references users(id) on delete cascade,
   profile_number text not null unique default ('PRF-' || upper(substr(gen_random_uuid()::text, 1, 12))),
   identity_number text not null unique default ('IDN-' || upper(substr(gen_random_uuid()::text, 1, 12))),
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
-
-create table if not exists core_identity_data (
-  id bigserial primary key,
-  profile_id bigint not null unique references citizen_profiles(id) on delete cascade,
-  full_name text not null,
+  full_name text,
   sex text,
   date_of_birth date,
   mother_name text,
@@ -151,6 +155,29 @@ create table if not exists core_identity_data (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+-- Migrate existing core_identity_data into citizen_profiles if table exists
+do $$ begin
+  if exists (select 1 from information_schema.tables where table_name = 'core_identity_data') then
+    update citizen_profiles cp
+    set full_name    = coalesce(cp.full_name,    cid.full_name),
+        sex          = coalesce(cp.sex,          cid.sex),
+        date_of_birth= coalesce(cp.date_of_birth,cid.date_of_birth),
+        mother_name  = coalesce(cp.mother_name,  cid.mother_name),
+        father_name  = coalesce(cp.father_name,  cid.father_name),
+        phone_number = coalesce(cp.phone_number, cid.phone_number),
+        email        = coalesce(cp.email,        cid.email),
+        photo_url    = coalesce(cp.photo_url,    cid.photo_url),
+        nationality  = coalesce(cp.nationality,  cid.nationality),
+        sub_city     = coalesce(cp.sub_city,     cid.sub_city),
+        woreda       = coalesce(cp.woreda,       cid.woreda),
+        address      = coalesce(cp.address,      cid.address),
+        updated_at   = now()
+    from core_identity_data cid
+    where cid.profile_id = cp.id;
+    drop table core_identity_data;
+  end if;
+end $$;
 
 create table if not exists households (
   id bigserial primary key,
@@ -169,6 +196,29 @@ create table if not exists household_members (
   created_at timestamptz not null default now(),
   unique (household_pk, profile_id)
 );
+
+create table if not exists form_templates (
+  id bigserial primary key,
+  service_slug text not null unique,
+  service_name text not null,
+  fields jsonb not null default '[]'::jsonb,
+  version int not null default 1,
+  is_active boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+-- Seed default form templates for each service
+insert into form_templates (service_slug, service_name, fields) values
+  ('birth-certificate', 'Birth Certificate', '[{"name":"childName","label":"Child''s full name","type":"text"},{"name":"dateOfBirth","label":"Date of birth","type":"date"},{"name":"placeOfBirth","label":"Place of birth","type":"text"},{"name":"fatherName","label":"Father''s full name","type":"text"},{"name":"motherName","label":"Mother''s full name","type":"text"}]'),
+  ('marriage-certificate', 'Marriage Certificate', '[{"name":"partnerOne","label":"Partner 1 full name","type":"text"},{"name":"partnerTwo","label":"Partner 2 full name","type":"text"},{"name":"weddingDate","label":"Wedding date","type":"date"},{"name":"venue","label":"Wedding venue","type":"text"}]'),
+  ('divorce-certificate', 'Divorce Certificate', '[{"name":"partnerOne","label":"Partner 1 full name","type":"text"},{"name":"partnerTwo","label":"Partner 2 full name","type":"text"},{"name":"courtCaseNumber","label":"Court case number","type":"text"},{"name":"decreeDate","label":"Decree date","type":"date"}]'),
+  ('death-certificate', 'Death Certificate', '[{"name":"deceasedName","label":"Deceased full name","type":"text"},{"name":"dateOfDeath","label":"Date of death","type":"date"},{"name":"placeOfDeath","label":"Place of death","type":"text"},{"name":"cause","label":"Cause (as recorded)","type":"text"}]'),
+  ('id-services', 'Residence ID Services', '[{"name":"reason","label":"Reason (new / renewal / replacement)","type":"text"},{"name":"currentIdNumber","label":"Current Residence ID number (if any)","type":"text"}]'),
+  ('residency-transfer', 'Residency Transfer Certificate', '[{"name":"previousAddress","label":"Previous address","type":"text"},{"name":"newAddress","label":"New address","type":"text"},{"name":"reason","label":"Reason for transfer","type":"textarea"}]'),
+  ('certificate-of-no-impediment', 'Certificate of No Impediment', '[{"name":"applicantName","label":"Applicant full name","type":"text"},{"name":"intendedSpouse","label":"Intended spouse full name","type":"text"},{"name":"purpose","label":"Purpose / country of use","type":"text"}]'),
+  ('residency-proof-letter', 'Residency Proof Letter', '[{"name":"residenceAddress","label":"Residence address","type":"text"},{"name":"purpose","label":"Purpose","type":"textarea"}]')
+on conflict (service_slug) do nothing;
 
 alter table applications add column if not exists reference_number text;
 update applications

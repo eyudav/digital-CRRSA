@@ -17,59 +17,23 @@ import { format, addDays } from "date-fns";
 import { cn } from "@/lib/utils";
 import { apiJson } from "@/lib/api";
 import { slotLabel } from "@/lib/applicationMap";
+
 const detailsSchema = z.record(z.string().trim().min(1, "Required").max(500));
-const FIELDS_FOR = {
-    "birth-certificate": [
-        { name: "childName", label: "Child's full name" },
-        { name: "dateOfBirth", label: "Date of birth", type: "date" },
-        { name: "placeOfBirth", label: "Place of birth" },
-        { name: "fatherName", label: "Father's full name" },
-        { name: "motherName", label: "Mother's full name" },
-    ],
-    "marriage-certificate": [
-        { name: "partnerOne", label: "Partner 1 full name" },
-        { name: "partnerTwo", label: "Partner 2 full name" },
-        { name: "weddingDate", label: "Wedding date", type: "date" },
-        { name: "venue", label: "Wedding venue" },
-    ],
-    "divorce-certificate": [
-        { name: "partnerOne", label: "Partner 1 full name" },
-        { name: "partnerTwo", label: "Partner 2 full name" },
-        { name: "courtCaseNumber", label: "Court case number" },
-        { name: "decreeDate", label: "Decree date", type: "date" },
-    ],
-    "death-certificate": [
-        { name: "deceasedName", label: "Deceased full name" },
-        { name: "dateOfDeath", label: "Date of death", type: "date" },
-        { name: "placeOfDeath", label: "Place of death" },
-        { name: "cause", label: "Cause (as recorded)" },
-    ],
-    "id-services": [
-        { name: "reason", label: "Reason (new / renewal / replacement)" },
-        { name: "currentIdNumber", label: "Current ID number (if any)" },
-    ],
-    "residency-transfer": [
-        { name: "previousAddress", label: "Previous address" },
-        { name: "newAddress", label: "New address" },
-        { name: "reason", label: "Reason for transfer", type: "textarea" },
-    ],
-    "certificate-of-no-impediment": [
-        { name: "applicantName", label: "Applicant full name" },
-        { name: "intendedSpouse", label: "Intended spouse full name" },
-        { name: "purpose", label: "Purpose / country of use" },
-    ],
-    "residency-proof-letter": [
-        { name: "residenceAddress", label: "Residence address" },
-        { name: "purpose", label: "Purpose", type: "textarea" },
-    ],
-};
+
 const Apply = () => {
     const { slug } = useParams();
     const navigate = useNavigate();
     const { user } = useAuth();
     const qc = useQueryClient();
     const service = useMemo(() => SERVICES.find((s) => s.slug === slug), [slug]);
-    const fields = service ? FIELDS_FOR[service.slug] || [] : [];
+
+    const { data: formTemplate } = useQuery({
+        queryKey: ["form-template", slug],
+        queryFn: () => apiJson(`/api/form-templates/${slug}`),
+        enabled: !!slug,
+    });
+    const fields = formTemplate?.fields ?? [];
+
     const [step, setStep] = useState(0);
     const [details, setDetails] = useState({});
     const [errors, setErrors] = useState({});
@@ -124,7 +88,7 @@ const Apply = () => {
             await apiJson("/api/appointments", {
                 method: "POST",
                 body: {
-                    applicationId: appId,
+                    applicationId: Number(appId),
                     slotId: Number(slotId),
                     officeCode: office,
                 },
@@ -133,7 +97,8 @@ const Apply = () => {
         },
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: ["applications", "my", user?.id] });
-            toast({ title: "Application submitted", description: "We'll keep you posted on every status change." });
+            qc.invalidateQueries({ queryKey: ["staff", "applications"] });
+            toast({ title: "Application submitted successfully." });
             navigate("/citizen/applications");
         },
         onError: (e) => toast({ title: "Submission failed", description: e.message, variant: "destructive" }),
@@ -174,9 +139,7 @@ const Apply = () => {
         setDocs((d) => [...d, ...next]);
     };
 
-    const onSubmit = () => {
-        submitMutation.mutate();
-    };
+    const onSubmit = () => { submitMutation.mutate(); };
     const next = () => {
         if (step === 0 && !validateDetails())
             return;
@@ -232,13 +195,6 @@ const Apply = () => {
           </div>)}
 
         {step === 2 && (<div className="grid gap-5 md:grid-cols-2">
-            <div className="space-y-1.5 md:col-span-2">
-              <Label>CRRSA office</Label>
-              <Select value={office} onValueChange={setOffice}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{OFFICES.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
             <div className="space-y-1.5">
               <Label>Date</Label>
               <Input type="date" value={date} min={format(addDays(new Date(), 1), "yyyy-MM-dd")} onChange={(e) => setDate(e.target.value)}/>

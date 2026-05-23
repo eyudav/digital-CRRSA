@@ -4,6 +4,7 @@ const API_TO_UI = {
   "Under Review": "under_review",
   "Additional Documents Required": "additional_documents_required",
   Approved: "approved",
+  Scheduled: "scheduled",
   Rejected: "rejected",
   "Ready for Collection": "ready_for_collection",
   Completed: "completed",

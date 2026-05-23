@@ -3,6 +3,7 @@ import { ArrowRight, BadgeCheck, Building2, CalendarCheck, FileSignature, Langua
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { SERVICES } from "@/data/seed";
+import { useAuth } from "@/context/AuthContext";
 const HIGHLIGHTS = [
     { icon: FileSignature, title: "Apply online", body: "Submit any of 8 civil registration services in minutes — no queue." },
     { icon: CalendarCheck, title: "Book your slot", body: "Reserve an office appointment with a real-time queue number." },
@@ -16,6 +17,7 @@ const STEPS = [
     { n: "04", title: "Track & collect", body: "Receive notifications and pick up your certificate." },
 ];
 const Index = () => {
+    const { user } = useAuth();
     return (<div className="min-h-screen bg-background">
       {/* Top bar */}
       <header className="border-b border-border/60 bg-background/80 backdrop-blur">
@@ -27,10 +29,18 @@ const Index = () => {
             <a href="#trust" className="hover:text-foreground">Security</a>
           </nav>
           <div className="flex items-center gap-2">
-            <Button asChild variant="ghost"><Link to="/login">Sign in</Link></Button>
-            <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90">
-              <Link to="/register">Get started</Link>
-            </Button>
+            {user ? (
+              <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90">
+                <Link to={user.role === 'citizen' ? '/citizen' : user.role === 'admin' ? '/staff/admin/users' : '/staff'}>Go to Dashboard</Link>
+              </Button>
+            ) : (
+              <>
+                <Button asChild variant="ghost"><Link to="/login">Sign in</Link></Button>
+                <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90">
+                  <Link to="/register">Get started</Link>
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -51,12 +61,20 @@ const Index = () => {
               Digital CRRSA brings birth, marriage, residency and identity services online. Apply, upload documents, book appointments and track your certificate - all from one secure place.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
-              <Button asChild size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 shadow-elegant">
-                <Link to="/register">Create your account <ArrowRight className="ml-1 h-4 w-4"/></Link>
-              </Button>
-              <Button asChild size="lg" variant="outline" className="border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground/10">
-                <Link to="/login">I already have an account</Link>
-              </Button>
+              {user ? (
+                <Button asChild size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 shadow-elegant">
+                  <Link to={user.role === 'citizen' ? '/citizen' : user.role === 'admin' ? '/staff/admin/users' : '/staff'}>Return to Dashboard <ArrowRight className="ml-1 h-4 w-4"/></Link>
+                </Button>
+              ) : (
+                <>
+                  <Button asChild size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90 shadow-elegant">
+                    <Link to="/register">Create your account <ArrowRight className="ml-1 h-4 w-4"/></Link>
+                  </Button>
+                  <Button asChild size="lg" variant="outline" className="border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground/10">
+                    <Link to="/login">I already have an account</Link>
+                  </Button>
+                </>
+              )}
             </div>
             <div className="mt-10 flex flex-wrap items-center gap-6 text-sm text-primary-foreground/65">
               <div className="flex items-center gap-2"><BadgeCheck className="h-4 w-4 text-accent"/> Government-grade security</div>
@@ -151,8 +169,14 @@ const Index = () => {
             <h2 className="mt-2 font-display text-3xl font-semibold md:text-4xl">Security and accountability at every step.</h2>
             <p className="mt-4 max-w-xl text-primary-foreground/75">Role-based access for citizens, staff and administrators. Every approval, document verification and certificate issuance is logged and auditable.</p>
             <div className="mt-6 flex flex-wrap gap-3">
-              <Button asChild className="bg-accent text-accent-foreground hover:bg-accent/90"><Link to="/register">Create an account</Link></Button>
-              <Button asChild variant="outline" className="border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground/10"><Link to="/login">Staff sign in</Link></Button>
+              {user ? (
+                <Button asChild className="bg-accent text-accent-foreground hover:bg-accent/90"><Link to={user.role === 'citizen' ? '/citizen' : user.role === 'admin' ? '/staff/admin/users' : '/staff'}>Dashboard</Link></Button>
+              ) : (
+                <>
+                  <Button asChild className="bg-accent text-accent-foreground hover:bg-accent/90"><Link to="/register">Create an account</Link></Button>
+                  <Button asChild variant="outline" className="border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground/10"><Link to="/login">Staff sign in</Link></Button>
+                </>
+              )}
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">

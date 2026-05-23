@@ -45,7 +45,7 @@ export function AuthProvider({ children }) {
   const register = useCallback(
     async (data) => {
       try {
-        const res = await apiJson("/api/auth/register", {
+        await apiJson("/api/auth/register", {
           method: "POST",
           body: {
             fullName: data.fullName,
@@ -56,15 +56,13 @@ export function AuthProvider({ children }) {
             address: data.address,
             subCity: data.subCity,
             woreda: data.woreda,
+            sex: data.sex,
+            dateOfBirth: data.dateOfBirth,
+            motherName: data.motherName,
+            fatherName: data.fatherName,
+            nationality: data.nationality,
           },
         });
-        if (res?.verificationRequired) {
-          return {
-            ok: true,
-            verificationRequired: true,
-            message: "Verification email sent. Please verify before login.",
-          };
-        }
       } catch (e) {
         return { ok: false, message: e.message || "Registration failed" };
       }
@@ -99,6 +97,18 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
+  const changePassword = useCallback(async (payload) => {
+    try {
+      await apiJson("/api/auth/change-password", {
+        method: "POST",
+        body: payload,
+      });
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, message: e.message || "Password change failed" };
+    }
+  }, []);
+
   const value = useMemo(
     () => ({
       user,
@@ -107,8 +117,9 @@ export function AuthProvider({ children }) {
       register,
       logout,
       updateProfile,
+      changePassword,
     }),
-    [user, session?.token, login, register, logout, updateProfile]
+    [user, session?.token, login, register, logout, updateProfile, changePassword]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

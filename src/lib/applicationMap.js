@@ -7,6 +7,9 @@ function feeForServiceName(name) {
 }
 
 function refFromRow(row) {
+  if (row.reference_number != null && String(row.reference_number).trim() !== "") {
+    return String(row.reference_number).trim();
+  }
   const t = row.created_at || row.createdAt;
   const year = t ? new Date(t).getFullYear() : new Date().getFullYear();
   const id = row.id;
@@ -105,10 +108,12 @@ export function mapApplicationDetail(payload) {
   const documents = (payload.documents || []).map((d) => ({
     id: String(d.id),
     applicationId: String(app.id),
-    name: d.file_name,
-    fileType: d.mime_type,
+    name: d.original_file_name || d.file_name,
+    url: d.optimized_url || d.cloudinary_secure_url || d.file_path || null,
+    downloadUrl: d.download_url || d.cloudinary_secure_url || d.file_path || null,
+    fileType: d.mime_type || d.cloudinary_format || "",
     sizeKb: Math.max(1, Math.round(Number(d.file_size) / 1024)),
-    uploadedAt: d.created_at,
+    uploadedAt: d.uploaded_at || d.created_at,
     verified: Boolean(d.verified),
   }));
 

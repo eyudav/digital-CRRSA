@@ -33,8 +33,8 @@ const Certificates = () => {
               <div className="min-w-0 flex-1">
                 <p className="font-display text-base font-semibold">{c.certificateType}</p>
                 <p className="text-xs text-muted-foreground">{c.serial} · Issued {format(new Date(c.issuedDate), "MMM d, yyyy")}</p>
+                <p className="mt-1 text-xs font-medium text-primary">Certificate must be collected physically.</p>
               </div>
-              <Button variant="outline" size="sm"><Download className="mr-1.5 h-4 w-4"/> PDF</Button>
             </div>))}
         </div>)}
     </>);

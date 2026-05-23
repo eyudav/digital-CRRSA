@@ -15,7 +15,7 @@ const StaffApplicationDetail = () => {
     const { id } = useParams();
     const qc = useQueryClient();
     const [comment, setComment] = useState("");
-    const { data: app, isLoading } = useQuery({
+    const { data: app, isLoading, isError, error, refetch } = useQuery({
         queryKey: ["application", id],
         queryFn: async () => {
             const payload = await apiJson(`/api/applications/${id}`);
@@ -49,13 +49,21 @@ const StaffApplicationDetail = () => {
             }),
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: ["application", id] });
+            qc.invalidateQueries({ queryKey: ["staff", "applications"] });
             toast({ title: "Document updated" });
         },
         onError: (e) => toast({ title: "Failed", description: e.message, variant: "destructive" }),
     });
 
-    if (isLoading || !app)
-        return <p className="p-8">Loading…</p>;
+    if (isLoading)
+        return <p className="p-8 text-sm text-muted-foreground">Loading…</p>;
+    if (isError)
+        return (<div className="p-8">
+          <p className="text-sm text-destructive">{error?.message || "Could not load application."}</p>
+          <Button variant="outline" size="sm" className="mt-3" onClick={() => refetch()}>Retry</Button>
+        </div>);
+    if (!app)
+        return null;
 
     const setStatus = (statusUi, message) => {
         patchStatus.mutate({ statusUi, message });
@@ -104,10 +112,16 @@ const StaffApplicationDetail = () => {
             {app.documents.length === 0 ? <p className="text-sm text-muted-foreground">Citizen has not uploaded documents yet.</p> : (<ul className="divide-y divide-border">
                 {app.documents.map((d) => (<li key={d.id} className="flex items-center justify-between gap-3 py-3 text-sm">
                     <div className="min-w-0">
-                      <p className="truncate font-medium">{d.name}</p>
+                      <a href={d.url} target="_blank" rel="noreferrer" className="truncate font-medium text-primary hover:underline">{d.name}</a>
                       <p className="text-xs text-muted-foreground">{d.sizeKb} KB · uploaded {format(new Date(d.uploadedAt), "MMM d")}</p>
                     </div>
                     <div className="flex items-center gap-2">
+                      <Button asChild size="sm" variant="outline">
+                        <a href={d.url} target="_blank" rel="noreferrer">View</a>
+                      </Button>
+                      {d.downloadUrl && (<Button asChild size="sm" variant="ghost">
+                          <a href={d.downloadUrl} target="_blank" rel="noreferrer">Download</a>
+                        </Button>)}
                       <span className={`rounded-full px-2 py-0.5 text-xs ${d.verified ? "bg-success/10 text-success" : "bg-warning/15 text-warning-foreground"}`}>{d.verified ? "Verified" : "Pending"}</span>
                       {d.verified ? (<Button size="sm" variant="ghost" onClick={() => verify(d.id, false)}><X className="h-4 w-4"/></Button>) : (<Button size="sm" variant="outline" onClick={() => verify(d.id, true)}><Check className="mr-1 h-4 w-4"/> Verify</Button>)}
                     </div>

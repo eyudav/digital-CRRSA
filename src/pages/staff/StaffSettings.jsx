@@ -8,12 +8,15 @@ import { toast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ADDIS_SUBCITIES, getWoredasForSubCity } from "@/data/addisLocations";
 const StaffSettings = () => {
-    const { user, updateProfile } = useAuth();
+    const { user, updateProfile, changePassword } = useAuth();
     const [name, setName] = useState(user?.fullName || "");
     const [phone, setPhone] = useState(user?.phone || "");
     const [address, setAddress] = useState(user?.address || "");
     const [subCity, setSubCity] = useState(user?.subCity || "");
     const [woreda, setWoreda] = useState(user?.woreda || "");
+    const [currentPassword, setCurrentPassword] = useState("");
+    const [newPassword, setNewPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
     const save = async () => {
         const res = await updateProfile({ fullName: name, phone, address, subCity, woreda });
         if (!res?.ok) {
@@ -21,6 +24,26 @@ const StaffSettings = () => {
             return;
         }
         toast({ title: "Profile updated" });
+    };
+    const savePassword = async () => {
+        if (newPassword !== confirmPassword) {
+            toast({ title: "Password mismatch", description: "New password and confirmation do not match.", variant: "destructive" });
+            return;
+        }
+        const passOk = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(newPassword);
+        if (!passOk) {
+            toast({ title: "Weak password", description: "Use at least 8 characters with upper, lower, and number.", variant: "destructive" });
+            return;
+        }
+        const res = await changePassword({ currentPassword, newPassword, confirmPassword });
+        if (!res?.ok) {
+            toast({ title: "Password update failed", description: res?.message, variant: "destructive" });
+            return;
+        }
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+        toast({ title: "Password changed successfully" });
     };
     return (<>
       <PageHeader title="Settings" description="Manage your account information."/>
@@ -63,6 +86,24 @@ const StaffSettings = () => {
           <div className="pt-2">
             <Button onClick={save} className="bg-primary text-primary-foreground hover:bg-primary/90">Save changes</Button>
           </div>
+        </div>
+      </div>
+      <div className="mt-5 max-w-xl rounded-2xl border border-border bg-card p-6 shadow-soft">
+        <h2 className="font-display text-lg font-semibold">Change password</h2>
+        <div className="mt-4 space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="currentPassword">Current password</Label>
+            <Input id="currentPassword" type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="newPassword">New password</Label>
+            <Input id="newPassword" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="confirmPassword">Confirm new password</Label>
+            <Input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+          </div>
+          <Button onClick={savePassword}>Update password</Button>
         </div>
       </div>
     </>);

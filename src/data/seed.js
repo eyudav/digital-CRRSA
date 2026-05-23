@@ -46,8 +46,8 @@ export const SERVICES = [
     {
         id: "svc-id",
         slug: "id-services",
-        name: "National ID Services",
-        description: "Apply, renew, or replace your national identification card.",
+        name: "Residence ID Services",
+        description: "Apply, renew, or replace your residence identification card.",
         fee: 80,
         processingDays: 14,
         requiredDocuments: ["Birth certificate", "Residency proof", "Passport photo"],
@@ -159,7 +159,7 @@ export const SEED_APPLICATIONS = [
         citizenId: "citizen-3",
         citizenName: "Sara Alemu",
         serviceId: "svc-id",
-        serviceName: "National ID Services",
+        serviceName: "Residence ID Services",
         status: "additional_documents_required",
         assignedStaffId: "staff-1",
         formData: { reason: "Renewal", currentIdNumber: "ETH-9921-3344" },
@@ -224,7 +224,7 @@ export const SEED_APPLICATIONS = [
     },
 ];
 export const SEED_ANNOUNCEMENTS = [
-    { id: "an-1", title: "Extended hours during national ID drive", body: "All CRRSA offices will operate from 7:00 to 19:00 from April 22 to May 6 to accommodate the national ID renewal campaign.", category: "service_update", createdAt: daysAgo(2), author: "CRRSA Communications" },
+    { id: "an-1", title: "Extended hours during residence ID drive", body: "All CRRSA offices will operate from 7:00 to 19:00 from April 22 to May 6 to accommodate the residence ID renewal campaign.", category: "service_update", createdAt: daysAgo(2), author: "CRRSA Communications" },
     { id: "an-2", title: "System maintenance — April 27, 22:00–01:00", body: "Online services will be briefly unavailable. Submitted applications will not be affected.", category: "interruption", createdAt: daysAgo(1), author: "IT Operations" },
     { id: "an-3", title: "New: Online booking for residency proof letters", body: "You can now schedule appointments fully online for residency proof services without visiting the office in advance.", category: "general", createdAt: daysAgo(7), author: "Service Design Team" },
 ];
@@ -245,9 +245,9 @@ export const SEED_CERTIFICATES = [
     { id: "cert-2", applicationId: "app-1005", certificateType: "Residency Transfer Certificate", citizenName: "Hanna Tesfaye", issuedDate: daysAgo(17), serial: "RTC-2025-00198" },
 ];
 export const SEED_USERS = [
-    { id: "citizen-1", email: "citizen@crrsa.gov", fullName: "Hanna Tesfaye", role: "citizen", phone: "+251 911 234 567", nationalId: "ETH-1122-9988", address: "Bole, Addis Ababa" },
-    { id: "citizen-2", email: "dawit@crrsa.gov", fullName: "Dawit Mekonnen", role: "citizen", phone: "+251 911 111 222", nationalId: "ETH-2211-4455", address: "Kirkos, Addis Ababa" },
-    { id: "citizen-3", email: "sara@crrsa.gov", fullName: "Sara Alemu", role: "citizen", phone: "+251 911 333 444", nationalId: "ETH-5566-7788", address: "Bahir Dar, Amhara" },
+    { id: "citizen-1", email: "citizen@crrsa.gov", fullName: "Hanna Tesfaye", role: "citizen", phone: "+251 911 234 567", residenceId: "ETH-1122-9988", address: "Bole, Addis Ababa" },
+    { id: "citizen-2", email: "dawit@crrsa.gov", fullName: "Dawit Mekonnen", role: "citizen", phone: "+251 911 111 222", residenceId: "ETH-2211-4455", address: "Kirkos, Addis Ababa" },
+    { id: "citizen-3", email: "sara@crrsa.gov", fullName: "Sara Alemu", role: "citizen", phone: "+251 911 333 444", residenceId: "ETH-5566-7788", address: "Bahir Dar, Amhara" },
     { id: "staff-1", email: "staff@crrsa.gov", fullName: "Bekele Worku", role: "staff", phone: "+251 911 555 010" },
     { id: "staff-2", email: "selam@crrsa.gov", fullName: "Selam Demissie", role: "staff", phone: "+251 911 555 011" },
 ];

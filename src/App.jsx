@@ -27,6 +27,9 @@ import StaffAnnouncements from "./pages/staff/StaffAnnouncements";
 import StaffComplaints from "./pages/staff/StaffComplaints";
 import StaffSettings from "./pages/staff/StaffSettings";
 import AdminUsers from "./pages/admin/AdminUsers";
+import SuperAdminDashboard from "./pages/superadmin/SuperAdminDashboard";
+import SuperAdminSettings from "./pages/superadmin/SuperAdminSettings";
+import SuperAdminLogs from "./pages/superadmin/SuperAdminLogs";
 const queryClient = new QueryClient();
 const App = () => (<QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -50,16 +53,23 @@ const App = () => (<QueryClientProvider client={queryClient}>
               <Route path="/citizen/announcements" element={<Announcements />}/>
               <Route path="/citizen/complaints" element={<Complaints />}/>
               <Route path="/citizen/certificates" element={<Certificates />}/>
+              <Route path="/citizen/settings" element={<StaffSettings />}/>
             </Route>
 
             <Route element={<RequireRole role={["staff", "admin", "super_admin"]}><AppShell /></RequireRole>}>
-              <Route path="/staff" element={<StaffDashboard />}/>
-              <Route path="/staff/queue" element={<Queue />}/>
-              <Route path="/staff/queue/:id" element={<StaffApplicationDetail />}/>
-              <Route path="/staff/announcements" element={<RequireRole role={["admin", "super_admin"]}><StaffAnnouncements /></RequireRole>} />
+              <Route path="/staff" element={<RequireRole role={["staff", "super_admin"]}><StaffDashboard /></RequireRole>} />
+              <Route path="/staff/queue" element={<RequireRole role={["staff", "super_admin"]}><Queue /></RequireRole>} />
+              <Route path="/staff/queue/:id" element={<RequireRole role={["staff", "super_admin"]}><StaffApplicationDetail /></RequireRole>} />
+              <Route path="/staff/announcements" element={<RequireRole role={["staff", "super_admin"]}><StaffAnnouncements /></RequireRole>} />
               <Route path="/staff/complaints" element={<StaffComplaints />}/>
               <Route path="/staff/settings" element={<StaffSettings />}/>
               <Route path="/staff/admin/users" element={<RequireRole role={["admin", "super_admin"]}><AdminUsers /></RequireRole>} />
+            </Route>
+
+            <Route element={<RequireRole role={["super_admin"]}><AppShell /></RequireRole>}>
+              <Route path="/super-admin" element={<SuperAdminDashboard />} />
+              <Route path="/super-admin/settings" element={<SuperAdminSettings />} />
+              <Route path="/super-admin/logs" element={<SuperAdminLogs />} />
             </Route>
 
             <Route path="*" element={<NotFound />}/>

@@ -13,9 +13,10 @@ const Queue = () => {
     const [q, setQ] = useState("");
     const [filter, setFilter] = useState("pending");
     const searchQ = q.trim() || "%";
-    const { data: searchRows = [] } = useQuery({
+    const { data: searchRows = [], isLoading, isError, error, refetch } = useQuery({
         queryKey: ["staff", "applications", "search", searchQ],
         queryFn: () => apiJson(`/api/records/search?q=${encodeURIComponent(searchQ)}`),
+        refetchOnWindowFocus: true,
     });
     const apps = searchRows.map(mapStaffSearchRow);
     const filtered = apps.filter((a) => {
@@ -23,11 +24,21 @@ const Queue = () => {
         if (filter === "all")
             return matchesQ;
         if (filter === "pending")
-            return matchesQ && ["submitted", "under_review", "additional_documents_required"].includes(a.status);
+            return matchesQ && ["submitted", "under_review", "additional_documents_required", "approved"].includes(a.status);
         return matchesQ && a.status === filter;
     });
     return (<>
       <PageHeader title="Review queue" description="Open an application to verify documents and take action."/>
+
+      {isLoading && <p className="text-sm text-muted-foreground">Loading queue…</p>}
+      {isError && (
+        <div className="mb-4 rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+          {error?.message || "Could not load applications."}{" "}
+          <Button variant="outline" size="sm" className="ml-2 align-middle" onClick={() => refetch()}>
+            Retry
+          </Button>
+        </div>
+      )}
 
       <div className="mb-5 flex flex-col gap-3 md:flex-row">
         <div className="relative flex-1">
@@ -54,7 +65,7 @@ const Queue = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {filtered.length === 0 && (<tr><td colSpan={6} className="p-10 text-center text-sm text-muted-foreground">No applications match.</td></tr>)}
+            {!isLoading && filtered.length === 0 && (<tr><td colSpan={6} className="p-10 text-center text-sm text-muted-foreground">No applications match.</td></tr>)}
             {filtered.map((a) => (<tr key={a.id} className="transition-colors hover:bg-secondary/30">
                 <td className="px-4 py-3 font-mono text-xs">{a.refNumber}</td>
                 <td className="px-4 py-3 font-medium">{a.serviceName}</td>

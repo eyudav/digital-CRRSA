@@ -9,6 +9,8 @@ import recordRoutes from "./records.js";
 import announcementRoutes from "./announcements.js";
 import complaintRoutes from "./complaints.js";
 import adminRoutes from "./admin.js";
+import superAdminRoutes from "./superadmin.js";
+import formTemplateRoutes from "./formTemplates.js";
 
 const router = express.Router();
 
@@ -22,5 +24,7 @@ router.use("/records", recordRoutes);
 router.use("/announcements", announcementRoutes);
 router.use("/complaints", complaintRoutes);
 router.use("/admin", adminRoutes);
+router.use("/super-admin", superAdminRoutes);
+router.use("/form-templates", formTemplateRoutes);
 
 export default router;

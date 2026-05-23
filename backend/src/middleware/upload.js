@@ -1,12 +1,5 @@
-import fs from "node:fs";
-import path from "node:path";
 import multer from "multer";
 import { env } from "../config/env.js";
-
-const uploadDir = path.resolve("backend/uploads");
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
 
 const allowedMimes = new Set([
   "application/pdf",
@@ -14,16 +7,8 @@ const allowedMimes = new Set([
   "image/png",
 ]);
 
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, uploadDir),
-  filename: (_req, file, cb) => {
-    const safeOriginal = file.originalname.replace(/\s+/g, "_");
-    cb(null, `${Date.now()}-${safeOriginal}`);
-  },
-});
-
 export const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: env.uploadMaxMb * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     if (!allowedMimes.has(file.mimetype)) {
