@@ -51,9 +51,9 @@ const Services = () => {
                 </div>
               </div>
               <div className="mt-4">
-                <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">Required documents</p>
+                <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">Who can apply</p>
                 <ul className="mt-1.5 space-y-1 text-xs text-muted-foreground">
-                  {s.requiredDocuments.slice(0, 3).map((d) => (<li key={d} className="flex gap-1.5"><span className="text-primary">•</span>{d}</li>))}
+                  {(s.whoCanApply || []).slice(0, 3).map((w) => (<li key={w} className="flex gap-1.5"><span className="text-primary">•</span>{w}</li>))}
                 </ul>
               </div>
               <Button asChild className="mt-5 w-full bg-primary text-primary-foreground hover:bg-primary/90">

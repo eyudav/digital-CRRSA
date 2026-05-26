@@ -19,6 +19,7 @@ export const registerSchema = z.object({
   motherName: z.string().trim().min(2).max(100).optional(),
   fatherName: z.string().trim().min(2).max(100).optional(),
   nationality: z.string().trim().min(2).max(100).optional(),
+  residenceIdNumber: z.string().trim().optional(),
 });
 
 export const loginSchema = z.object({

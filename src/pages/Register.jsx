@@ -23,6 +23,7 @@ const schema = z.object({
     motherName: z.string().trim().min(2, "Mother's name is required").max(100),
     fatherName: z.string().trim().min(2, "Father's name is required").max(100),
     nationality: z.string().trim().min(2, "Nationality is required").max(100),
+    residenceIdNumber: z.string().trim().max(100).optional().or(z.literal("")),
 });
 
 const Register = () => {
@@ -31,7 +32,7 @@ const Register = () => {
     const [form, setForm] = useState({
         fullName: "", email: "", password: "", phone: "", address: "",
         subCity: "", woreda: "", sex: "", dateOfBirth: "",
-        motherName: "", fatherName: "", nationality: "",
+        motherName: "", fatherName: "", nationality: "", residenceIdNumber: "",
     });
     const [errors, setErrors] = useState({});
     const update = (k, v) => setForm((f) => ({ ...f, [k]: v }));
@@ -54,6 +55,7 @@ const Register = () => {
             subCity: d.subCity, woreda: d.woreda, sex: d.sex,
             dateOfBirth: d.dateOfBirth, motherName: d.motherName,
             fatherName: d.fatherName, nationality: d.nationality,
+            residenceIdNumber: d.residenceIdNumber || undefined,
         });
         if (!res.ok) {
             toast({ title: "Registration failed", description: res.message, variant: "destructive" });
@@ -152,6 +154,12 @@ const Register = () => {
                         <div className="space-y-1.5 md:col-span-2">
                             <Label htmlFor="address">Address</Label>
                             <Input id="address" value={form.address} onChange={(e) => update("address", e.target.value)} />
+                        </div>
+
+                        <div className="space-y-1.5 md:col-span-2">
+                            <Label htmlFor="residenceIdNumber">Residence ID Number (Optional)</Label>
+                            <Input id="residenceIdNumber" value={form.residenceIdNumber} onChange={(e) => update("residenceIdNumber", e.target.value)} placeholder="e.g., ETH-1234-5678 (leave blank if you don't have one)" />
+                            {errors.residenceIdNumber && <p className="text-xs text-destructive">{errors.residenceIdNumber}</p>}
                         </div>
 
                         <div className="md:col-span-2 flex items-center justify-between gap-4 pt-2">

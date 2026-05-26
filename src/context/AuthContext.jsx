@@ -61,6 +61,7 @@ export function AuthProvider({ children }) {
             motherName: data.motherName,
             fatherName: data.fatherName,
             nationality: data.nationality,
+            residenceIdNumber: data.residenceIdNumber,
           },
         });
       } catch (e) {

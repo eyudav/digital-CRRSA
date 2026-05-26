@@ -19,7 +19,10 @@ app.get("/api/health", (_req, res) => {
 app.get("/api/documents/:filename", requireAuth, requireRole("staff", "admin", "super_admin"), (req, res, next) => {
   try {
     const filename = req.params.filename;
-    const documentPath = path.resolve("backend/uploads", filename);
+    let documentPath = path.resolve("backend/uploads", filename);
+    if (!fs.existsSync(documentPath)) {
+      documentPath = path.resolve("backend/uploads/documents", filename);
+    }
     if (!fs.existsSync(documentPath)) {
       return res.status(404).json({ message: "Document not found" });
     }

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Check, FileText, MessageSquare, ScrollText, ShieldX, Upload, X } from "lucide-react";
+import { ArrowLeft, Check, FileText, MessageSquare, ScrollText, ShieldX, Upload, UserCheck, X } from "lucide-react";
 import { PageHeader } from "@/components/AppShell";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
@@ -100,13 +100,51 @@ const StaffApplicationDetail = () => {
       <div className="grid gap-5 lg:grid-cols-3">
         <div className="space-y-5 lg:col-span-2">
           <Card title="Submitted details" icon={FileText}>
-            <dl className="grid gap-3 text-sm md:grid-cols-2">
-              {Object.entries(app.formData).map(([k, v]) => (<div key={k}>
-                  <dt className="text-xs uppercase tracking-wider text-muted-foreground">{k.replace(/([A-Z])/g, " $1")}</dt>
-                  <dd className="font-medium">{String(v)}</dd>
-                </div>))}
+            <dl className="grid gap-4 text-sm md:grid-cols-2">
+              {Object.entries(app.formData).map(([k, v]) => {
+                if (k === "appointmentMetadata") return null;
+                if (typeof v === "object" && v !== null) {
+                  return (
+                    <div key={k} className="md:col-span-2 bg-secondary/15 p-3 rounded-xl border border-border/40 mt-1">
+                      <dt className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                        {k.replace(/([A-Z])/g, " $1").trim()}
+                      </dt>
+                      <dd className="font-medium">
+                        <pre className="text-xs overflow-auto whitespace-pre-wrap font-sans">{JSON.stringify(v, null, 2)}</pre>
+                      </dd>
+                    </div>
+                  );
+                }
+                const label = k.replace(/([A-Z])/g, " $1").trim();
+                const displayLabel = label.charAt(0).toUpperCase() + label.slice(1);
+                return (
+                  <div key={k} className="border-b border-border/45 pb-2">
+                    <dt className="text-xs uppercase tracking-wider text-muted-foreground">{displayLabel}</dt>
+                    <dd className="font-semibold text-foreground mt-0.5">{String(v)}</dd>
+                  </div>
+                );
+              })}
             </dl>
           </Card>
+
+          {app.formData.appointmentMetadata && (
+            <Card title="Appointment Confirmations" icon={UserCheck}>
+              <dl className="grid gap-4 text-sm md:grid-cols-2">
+                {Object.entries(app.formData.appointmentMetadata).map(([k, v]) => {
+                  if (v === null || v === "") return null;
+                  const label = k.replace(/([A-Z])/g, " $1").trim();
+                  const displayLabel = label.charAt(0).toUpperCase() + label.slice(1);
+                  const displayValue = typeof v === "boolean" ? (v ? "Yes / Confirmed" : "No") : String(v);
+                  return (
+                    <div key={k} className="border-b border-border/45 pb-2">
+                      <dt className="text-xs uppercase tracking-wider text-muted-foreground">{displayLabel}</dt>
+                      <dd className="font-semibold text-foreground mt-0.5">{displayValue}</dd>
+                    </div>
+                  );
+                })}
+              </dl>
+            </Card>
+          )}
 
           <Card title="Documents" icon={Upload}>
             {app.documents.length === 0 ? <p className="text-sm text-muted-foreground">Citizen has not uploaded documents yet.</p> : (<ul className="divide-y divide-border">

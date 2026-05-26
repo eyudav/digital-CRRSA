@@ -51,11 +51,68 @@ router.patch("/applications/:id/status", async (req, res, next) => {
     if (!allowed.has(status)) return res.status(400).json({ message: "Invalid status value" });
 
     const app = await query(
-      `select id, citizen_id, office_code, service_type from applications where id = $1`,
+      `select id, citizen_id, office_code, service_type, form_data from applications where id = $1`,
       [id]
     );
     if (!app.rowCount) return res.status(404).json({ message: "Application not found" });
     const { citizen_id: citizenId, office_code: officeCode } = app.rows[0];
+
+    if (status === "Approved") {
+      // Sync Residence ID approval to citizen_profiles and users
+      if (app.rows[0].service_type === "Residence ID Services") {
+        const formData = app.rows[0].form_data || {};
+        const generatedId = "ETH-" + Math.floor(1000 + Math.random() * 9000) + "-" + Math.floor(1000 + Math.random() * 9000);
+        
+        await query(
+          `update citizen_profiles
+           set full_name = coalesce($1, full_name),
+               sex = coalesce($2, sex),
+               date_of_birth = coalesce($3, date_of_birth),
+               mother_name = coalesce($4, mother_name),
+               father_name = coalesce($5, father_name),
+               phone_number = coalesce($6, phone_number),
+               email = coalesce($7, email),
+               nationality = coalesce($8, nationality),
+               sub_city = coalesce($9, sub_city),
+               woreda = coalesce($10, woreda),
+               address = coalesce($11, address),
+               residence_id_number = coalesce(residence_id_number, $12),
+               updated_at = now()
+           where user_id = $13`,
+          [
+            formData.fullName || null,
+            formData.sex || null,
+            formData.dateOfBirth ? new Date(formData.dateOfBirth) : null,
+            formData.motherName || null,
+            formData.fatherName || null,
+            formData.phone || null,
+            formData.email || null,
+            formData.nationality || "Ethiopian",
+            formData.subCity || app.rows[0].office_code.split(" — ").pop() || null,
+            formData.woreda || null,
+            formData.address || null,
+            generatedId,
+            citizenId
+          ]
+        );
+        
+        await query(
+          `update users
+           set sub_city = coalesce($1, sub_city),
+               woreda = coalesce($2, woreda),
+               phone = coalesce($3, phone),
+               address = coalesce($4, address)
+           where id = $5`,
+          [
+            formData.subCity || null,
+            formData.woreda || null,
+            formData.phone || null,
+            formData.address || null,
+            citizenId
+          ]
+        );
+      }
+    }
 
     if (status === "Approved") {
       let appt = await getLatestAppointmentSummary(id);

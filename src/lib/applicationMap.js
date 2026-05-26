@@ -105,17 +105,24 @@ export function mapApplicationDetail(payload) {
     });
   }
 
-  const documents = (payload.documents || []).map((d) => ({
-    id: String(d.id),
-    applicationId: String(app.id),
-    name: d.original_file_name || d.file_name,
-    url: d.optimized_url || d.cloudinary_secure_url || d.file_path || null,
-    downloadUrl: d.download_url || d.cloudinary_secure_url || d.file_path || null,
-    fileType: d.mime_type || d.cloudinary_format || "",
-    sizeKb: Math.max(1, Math.round(Number(d.file_size) / 1024)),
-    uploadedAt: d.uploaded_at || d.created_at,
-    verified: Boolean(d.verified),
-  }));
+  const documents = (payload.documents || []).map((d) => {
+    let resolvedUrl = d.optimized_url || d.cloudinary_secure_url || d.file_path || null;
+    if (resolvedUrl && (resolvedUrl.startsWith("backend/uploads/") || resolvedUrl.startsWith("uploads/"))) {
+      const filename = resolvedUrl.split("/").pop();
+      resolvedUrl = `/api/documents/${filename}`;
+    }
+    return {
+      id: String(d.id),
+      applicationId: String(app.id),
+      name: d.original_file_name || d.file_name,
+      url: resolvedUrl,
+      downloadUrl: resolvedUrl,
+      fileType: d.mime_type || d.cloudinary_format || "",
+      sizeKb: Math.max(1, Math.round(Number(d.file_size) / 1024)),
+      uploadedAt: d.uploaded_at || d.created_at,
+      verified: Boolean(d.verified),
+    };
+  });
 
   let appointment = null;
   if (payload.appointment) {

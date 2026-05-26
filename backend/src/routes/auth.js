@@ -9,9 +9,19 @@ import { logAudit } from "../services/auditService.js";
 
 const router = express.Router();
 
-function publicUserRow(u) {
+async function getUserDetails(userId) {
+  const { rows } = await query(
+    `select u.id, u.full_name, u.email, u.role, u.sub_city, u.woreda, u.phone, u.address, u.is_active,
+            cp.sex, cp.date_of_birth, cp.mother_name, cp.father_name, cp.nationality, cp.residence_id_number, cp.profile_number
+     from users u
+     left join citizen_profiles cp on cp.user_id = u.id
+     where u.id = $1`,
+    [userId]
+  );
+  if (!rows.length) return null;
+  const u = rows[0];
   return {
-    id: u.id,
+    id: String(u.id),
     fullName: u.full_name,
     email: u.email,
     role: u.role,
@@ -20,6 +30,13 @@ function publicUserRow(u) {
     phone: u.phone,
     address: u.address,
     isActive: Boolean(u.is_active),
+    sex: u.sex || null,
+    dateOfBirth: u.date_of_birth ? new Date(u.date_of_birth).toISOString().slice(0, 10) : null,
+    motherName: u.mother_name || null,
+    fatherName: u.father_name || null,
+    nationality: u.nationality || null,
+    residenceIdNumber: u.residence_id_number || null,
+    profileNumber: u.profile_number || null,
   };
 }
 
@@ -50,8 +67,8 @@ router.post("/register", async (req, res, next) => {
     await query(
       `insert into citizen_profiles (
          user_id, full_name, sex, date_of_birth, mother_name, father_name,
-         phone_number, email, nationality, sub_city, woreda, address
-       ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+         phone_number, email, nationality, sub_city, woreda, address, residence_id_number
+       ) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
        on conflict (user_id) do update
        set full_name = excluded.full_name,
            sex = excluded.sex,
@@ -64,12 +81,13 @@ router.post("/register", async (req, res, next) => {
            sub_city = excluded.sub_city,
            woreda = excluded.woreda,
            address = excluded.address,
+           residence_id_number = excluded.residence_id_number,
            updated_at = now()`,
       [
         u.id,
         u.full_name,
         payload.sex || null,
-        payload.dateOfBirth || null,
+        payload.dateOfBirth ? new Date(payload.dateOfBirth) : null,
         payload.motherName || null,
         payload.fatherName || null,
         u.phone,
@@ -78,6 +96,7 @@ router.post("/register", async (req, res, next) => {
         u.sub_city,
         u.woreda,
         u.address,
+        payload.residenceIdNumber || null,
       ]
     );
     await logAudit({
@@ -87,7 +106,8 @@ router.post("/register", async (req, res, next) => {
       entityId: String(u.id),
       details: { role: u.role, subCity: u.sub_city, woreda: u.woreda },
     });
-    return res.status(201).json({ user: publicUserRow(u) });
+    const details = await getUserDetails(u.id);
+    return res.status(201).json({ user: details });
   } catch (err) {
     return next(err);
   }
@@ -97,8 +117,7 @@ router.post("/login", async (req, res, next) => {
   try {
     const payload = loginSchema.parse(req.body);
     const { rows } = await query(
-      `select id, full_name, email, role, password_hash, sub_city, woreda, phone, address, is_active
-       from users where email = $1`,
+      `select id, password_hash, is_active from users where email = $1`,
       [payload.email]
     );
     const user = rows[0];
@@ -112,10 +131,11 @@ router.post("/login", async (req, res, next) => {
     if (!user.is_active) {
       return res.status(403).json({ message: "Account is inactive" });
     }
-    const token = jwt.sign({ sub: user.id, role: user.role, email: user.email }, env.jwtSecret, {
+    const details = await getUserDetails(user.id);
+    const token = jwt.sign({ sub: details.id, role: details.role, email: details.email }, env.jwtSecret, {
       expiresIn: env.jwtExpiresIn,
     });
-    return res.json({ token, user: publicUserRow(user) });
+    return res.json({ token, user: details });
   } catch (err) {
     return next(err);
   }
@@ -123,13 +143,9 @@ router.post("/login", async (req, res, next) => {
 
 router.get("/me", requireAuth, async (req, res, next) => {
   try {
-    const { rows } = await query(
-      `select id, full_name, email, role, sub_city, woreda, phone, address, is_active
-       from users where id = $1`,
-      [req.user.sub]
-    );
-    if (!rows.length) return res.status(404).json({ message: "User not found" });
-    return res.json({ user: publicUserRow(rows[0]) });
+    const details = await getUserDetails(req.user.sub);
+    if (!details) return res.status(404).json({ message: "User not found" });
+    return res.json({ user: details });
   } catch (err) {
     return next(err);
   }
@@ -137,7 +153,7 @@ router.get("/me", requireAuth, async (req, res, next) => {
 
 router.patch("/profile", requireAuth, async (req, res, next) => {
   try {
-    const { fullName, phone, address, subCity, woreda } = req.body || {};
+    const { fullName, phone, address, subCity, woreda, sex, dateOfBirth, motherName, fatherName, nationality, residenceIdNumber } = req.body || {};
     const { rows } = await query(
       `update users
        set full_name = coalesce($1, full_name),
@@ -146,18 +162,42 @@ router.patch("/profile", requireAuth, async (req, res, next) => {
            sub_city = coalesce($4, sub_city),
            woreda = coalesce($5, woreda)
        where id = $6
-       returning id, full_name, email, role, sub_city, woreda, phone, address, is_active`,
+       returning id`,
       [fullName || null, phone || null, address || null, subCity || null, woreda || null, req.user.sub]
     );
     if (!rows.length) return res.status(404).json({ message: "User not found" });
-    const u = rows[0];
     await query(
       `update citizen_profiles
-       set full_name = $1, phone_number = $2, email = $3, sub_city = $4, woreda = $5, address = $6, updated_at = now()
-       where user_id = $7`,
-      [u.full_name, u.phone, u.email, u.sub_city, u.woreda, u.address, u.id]
+       set full_name = coalesce($1, full_name),
+           phone_number = coalesce($2, phone_number),
+           address = coalesce($3, address),
+           sub_city = coalesce($4, sub_city),
+           woreda = coalesce($5, woreda),
+           sex = coalesce($6, sex),
+           date_of_birth = coalesce($7, date_of_birth),
+           mother_name = coalesce($8, mother_name),
+           father_name = coalesce($9, father_name),
+           nationality = coalesce($10, nationality),
+           residence_id_number = coalesce($11, residence_id_number),
+           updated_at = now()
+       where user_id = $12`,
+      [
+        fullName || null,
+        phone || null,
+        address || null,
+        subCity || null,
+        woreda || null,
+        sex || null,
+        dateOfBirth ? new Date(dateOfBirth) : null,
+        motherName || null,
+        fatherName || null,
+        nationality || null,
+        residenceIdNumber || null,
+        req.user.sub
+      ]
     );
-    return res.json({ user: publicUserRow(u) });
+    const details = await getUserDetails(req.user.sub);
+    return res.json({ user: details });
   } catch (err) {
     return next(err);
   }
