@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { PageHeader } from "@/components/AppShell";
+import { PageHeader } from "@/components/PageHeader";
 import { StatusBadge, STATUS_LABELS } from "@/components/StatusBadge";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/SearchInput";
+import { FilterBar } from "@/components/FilterBar";
+import { DataTable } from "@/components/DataTable";
 import { Button } from "@/components/ui/button";
-import { Search } from "lucide-react";
 import { format } from "date-fns";
 import { apiJson } from "@/lib/api";
 import { mapStaffSearchRow } from "@/lib/applicationMap";
@@ -41,44 +42,59 @@ const Queue = () => {
       )}
 
       <div className="mb-5 flex flex-col gap-3 md:flex-row">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"/>
-          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search ref, citizen, or service..." className="pl-9"/>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button size="sm" variant={filter === "pending" ? "default" : "outline"} className={filter === "pending" ? "bg-primary text-primary-foreground" : ""} onClick={() => setFilter("pending")}>Pending</Button>
-          <Button size="sm" variant={filter === "all" ? "default" : "outline"} className={filter === "all" ? "bg-primary text-primary-foreground" : ""} onClick={() => setFilter("all")}>All</Button>
-          {Object.entries(STATUS_LABELS).map(([id, label]) => (<Button key={id} size="sm" variant={filter === id ? "default" : "outline"} className={filter === id ? "bg-primary text-primary-foreground" : ""} onClick={() => setFilter(id)}>{label}</Button>))}
-        </div>
+        <SearchInput value={q} onChange={setQ} placeholder="Search ref, citizen, or service..." />
+        <FilterBar 
+          options={[
+            { id: "pending", label: "Pending" },
+            { id: "all", label: "All" },
+            ...Object.entries(STATUS_LABELS).map(([id, label]) => ({ id, label }))
+          ]}
+          currentFilter={filter}
+          onFilterChange={setFilter}
+        />
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-soft">
-        <table className="w-full text-sm">
-          <thead className="bg-secondary/50 text-xs uppercase tracking-wider text-muted-foreground">
-            <tr>
-              <th className="px-4 py-3 text-left">Reference</th>
-              <th className="px-4 py-3 text-left">Service</th>
-              <th className="px-4 py-3 text-left">Citizen</th>
-              <th className="hidden px-4 py-3 text-left md:table-cell">Submitted</th>
-              <th className="px-4 py-3 text-left">Status</th>
-              <th className="px-4 py-3"></th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {!isLoading && filtered.length === 0 && (<tr><td colSpan={6} className="p-10 text-center text-sm text-muted-foreground">No applications match.</td></tr>)}
-            {filtered.map((a) => (<tr key={a.id} className="transition-colors hover:bg-secondary/30">
-                <td className="px-4 py-3 font-mono text-xs">{a.refNumber}</td>
-                <td className="px-4 py-3 font-medium">{a.serviceName}</td>
-                <td className="px-4 py-3">{a.citizenName}</td>
-                <td className="hidden px-4 py-3 text-muted-foreground md:table-cell">{format(new Date(a.submittedAt), "MMM d, yyyy")}</td>
-                <td className="px-4 py-3"><StatusBadge status={a.status}/></td>
-                <td className="px-4 py-3 text-right">
-                  <Button asChild size="sm" variant="outline"><Link to={`/staff/queue/${a.id}`}>Review</Link></Button>
-                </td>
-              </tr>))}
-          </tbody>
-        </table>
-      </div>
+      <DataTable 
+        columns={[
+          {
+            header: "Reference",
+            cell: (row) => <span className="font-mono text-xs">{row.refNumber}</span>
+          },
+          {
+            header: "Service",
+            cell: (row) => <span className="font-medium text-foreground">{row.serviceName}</span>
+          },
+          {
+            header: "Citizen",
+            cell: (row) => <span>{row.citizenName}</span>
+          },
+          {
+            header: "Submitted",
+            cell: (row) => <span className="text-muted-foreground">{format(new Date(row.submittedAt), "MMM d, yyyy")}</span>,
+            headerClassName: "hidden md:table-cell",
+            cellClassName: "hidden md:table-cell"
+          },
+          {
+            header: "Status",
+            cell: (row) => <StatusBadge status={row.status} />
+          },
+          {
+            header: "",
+            cell: (row) => (
+              <Button asChild size="sm" variant="outline" className="w-full">
+                <Link to={`/staff/queue/${row.id}`}>Review</Link>
+              </Button>
+            ),
+            cellClassName: "text-right"
+          }
+        ]}
+        data={filtered}
+        isLoading={isLoading}
+        isError={isError}
+        error={error}
+        emptyMessage={<div className="p-10 text-center text-sm text-muted-foreground">No applications match.</div>}
+        onRowClick={(row) => window.location.href = `/staff/queue/${row.id}`}
+      />
     </>);
 };
 export default Queue;

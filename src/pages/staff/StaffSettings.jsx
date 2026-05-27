@@ -1,5 +1,6 @@
 import { useAuth } from "@/context/AuthContext";
-import { PageHeader } from "@/components/AppShell";
+import { PageHeader } from "@/components/PageHeader";
+import { ContentCard } from "@/components/ContentCard";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -47,8 +48,9 @@ const StaffSettings = () => {
     };
     return (<>
       <PageHeader title="Settings" description="Manage your account information."/>
-      <div className="max-w-xl rounded-2xl border border-border bg-card p-6 shadow-soft">
-        <div className="space-y-4">
+      <div className="max-w-xl">
+        <ContentCard>
+          <div className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="name">Full name</Label>
             <Input id="name" value={name} onChange={(e) => setName(e.target.value)}/>
@@ -86,10 +88,11 @@ const StaffSettings = () => {
           <div className="pt-2">
             <Button onClick={save} className="bg-primary text-primary-foreground hover:bg-primary/90">Save changes</Button>
           </div>
-        </div>
+          </div>
+        </ContentCard>
       </div>
-      <div className="mt-5 max-w-xl rounded-2xl border border-border bg-card p-6 shadow-soft">
-        <h2 className="font-display text-lg font-semibold">Change password</h2>
+      <div className="mt-5 max-w-xl">
+        <ContentCard title="Change password">
         <div className="mt-4 space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="currentPassword">Current password</Label>
@@ -103,8 +106,9 @@ const StaffSettings = () => {
             <Label htmlFor="confirmPassword">Confirm new password</Label>
             <Input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
           </div>
-          <Button onClick={savePassword}>Update password</Button>
-        </div>
+            <Button onClick={savePassword}>Update password</Button>
+          </div>
+        </ContentCard>
       </div>
     </>);
 };

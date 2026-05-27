@@ -1,3 +1,4 @@
+import { ThemeProvider } from "next-themes";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -32,8 +33,9 @@ import SuperAdminSettings from "./pages/superadmin/SuperAdminSettings";
 import SuperAdminLogs from "./pages/superadmin/SuperAdminLogs";
 const queryClient = new QueryClient();
 const App = () => (<QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <TooltipProvider>
+        <Toaster />
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
@@ -77,5 +79,6 @@ const App = () => (<QueryClientProvider client={queryClient}>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
+    </ThemeProvider>
   </QueryClientProvider>);
 export default App;

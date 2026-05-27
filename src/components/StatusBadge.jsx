@@ -23,8 +23,11 @@ const STYLES = {
 export function StatusBadge({ status, className }) {
     const label = LABELS[status] || String(status || "").replace(/_/g, " ");
     const style = STYLES[status] || "bg-muted text-muted-foreground border-border";
-    return (<Badge variant="outline" className={cn("rounded-full border px-2.5 py-0.5 text-xs font-medium", style, className)}>
-      {label}
-    </Badge>);
+    return (
+      <Badge variant="outline" className={cn("rounded-full border px-2.5 py-0.5 text-xs font-medium inline-flex items-center gap-1.5", style, className)}>
+        <span className="h-1.5 w-1.5 rounded-full bg-current opacity-70" />
+        {label}
+      </Badge>
+    );
 }
 export const STATUS_LABELS = LABELS;

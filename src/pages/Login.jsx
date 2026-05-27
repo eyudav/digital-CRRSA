@@ -5,6 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Logo } from "@/components/Logo";
 import { toast } from "@/hooks/use-toast";
 import { ShieldCheck } from "lucide-react";
@@ -87,32 +88,38 @@ const Login = () => {
       </div>
 
       <div className="flex items-center justify-center bg-background p-6 md:p-12">
-        <div className="w-full max-w-md">
-          <div className="mb-8 lg:hidden"><Logo /></div>
-          <h2 className="font-display text-3xl font-semibold tracking-tight">Sign in</h2>
-          <p className="mt-2 text-sm text-muted-foreground">Use your Digital CRRSA account to continue.</p>
+        <Card className="w-full max-w-md border-border shadow-elegant">
+          <CardHeader className="space-y-2">
+            <div className="mb-4 lg:hidden"><Logo /></div>
+            <CardTitle className="font-display text-3xl font-semibold tracking-tight">Sign in</CardTitle>
+            <CardDescription className="text-sm">Use your Digital CRRSA account to continue.</CardDescription>
+          </CardHeader>
 
-          <form onSubmit={onSubmit} className="mt-8 space-y-5">
-            <div className="space-y-1.5">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="text" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Username or email"/>
-              {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)}/>
-              {errors.password && <p className="text-xs text-destructive">{errors.password}</p>}
-            </div>
-            <Button type="submit" disabled={submitting} className="w-full bg-primary text-primary-foreground hover:bg-primary/90">Sign in</Button>
-            <Button type="button" variant="outline" onClick={resendVerification} disabled={resending} className="w-full">
-              Resend verification email
-            </Button>
-          </form>
+          <CardContent>
+            <form onSubmit={onSubmit} className="space-y-5">
+              <div className="space-y-1.5">
+                <Label htmlFor="email">Email</Label>
+                <Input id="email" type="text" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Username or email"/>
+                {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="password">Password</Label>
+                <Input id="password" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)}/>
+                {errors.password && <p className="text-xs text-destructive">{errors.password}</p>}
+              </div>
+              <Button type="submit" disabled={submitting} className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
+                {submitting ? "Signing in..." : "Sign in"}
+              </Button>
+              <Button type="button" variant="outline" onClick={resendVerification} disabled={resending} className="w-full">
+                {resending ? "Sending..." : "Resend verification email"}
+              </Button>
+            </form>
 
-          <p className="mt-6 text-center text-sm text-muted-foreground">
-            Don't have an account? <Link to="/register" className="font-medium text-primary hover:underline">Register</Link>
-          </p>
-        </div>
+            <p className="mt-6 text-center text-sm text-muted-foreground">
+              Don't have an account? <Link to="/register" className="font-medium text-primary hover:underline">Register</Link>
+            </p>
+          </CardContent>
+        </Card>
       </div>
     </div>);
 };

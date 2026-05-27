@@ -24,10 +24,7 @@ const Apply = () => {
     const qc = useQueryClient();
     const service = useMemo(() => SERVICES.find((s) => s.slug === slug), [slug]);
 
-    // Residence ID Check
-    const hasResidenceId = !!user?.residenceIdNumber;
     const isIdService = slug === "id-services";
-    const isBlocked = !hasResidenceId && !isIdService;
 
     const [step, setStep] = useState(0);
     const [details, setDetails] = useState({});
@@ -360,39 +357,6 @@ const Apply = () => {
     if (!service)
         return <p>Service not found. <Link to="/citizen/services" className="text-primary underline">Back to services</Link></p>;
 
-    // Blocker Screen Render
-    if (isBlocked) {
-        return (
-            <div className="container max-w-2xl py-16">
-                <div className="rounded-3xl border border-destructive/20 bg-destructive/5 p-8 text-center shadow-elegant md:p-10">
-                    <span className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-destructive/10 text-destructive mb-6">
-                        <ShieldAlert className="h-8 w-8"/>
-                    </span>
-                    <h2 className="font-display text-2xl font-bold text-foreground">Residence ID Required</h2>
-                    <p className="mt-3 text-muted-foreground leading-relaxed">
-                        To maintain secure records, citizens must possess a registered **Residence ID Number** before applying for any civil registration services (Birth, Marriage, Divorce, Death, Residency Transfer, or Letters).
-                    </p>
-                    <div className="mt-8 rounded-2xl bg-card border border-border p-5 text-left text-sm flex gap-3.5 items-start">
-                        <BadgeInfo className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                        <div>
-                            <p className="font-semibold">How to proceed:</p>
-                            <p className="text-muted-foreground mt-1">
-                                Apply for a new **Residence ID Service** below. Once staff approves your application, your Residence ID will be generated automatically and you will be unlocked to request other civil services.
-                            </p>
-                        </div>
-                    </div>
-                    <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
-                        <Button asChild variant="outline">
-                            <Link to="/citizen/services">View all services</Link>
-                        </Button>
-                        <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90">
-                            <Link to="/citizen/apply/id-services">Apply for Residence ID</Link>
-                        </Button>
-                    </div>
-                </div>
-            </div>
-        );
-    }
 
     return (<>
       <PageHeader eyebrow={service.category} title={`Apply: ${service.name}`} description={service.description}/>
@@ -486,7 +450,7 @@ const Apply = () => {
                             {errors.childSex && <p className="text-xs text-destructive">{errors.childSex}</p>}
                         </div>
                         <div className="space-y-1.5">
-                            <Label htmlFor="childDob">Child Date & Time of Birth</Label>
+                            <Label htmlFor="childDob">Child Birth Date & Time</Label>
                             <Input id="childDob" type="datetime-local" value={details.childDob || ""} onChange={(e) => setDetails({ ...details, childDob: e.target.value })} />
                             {errors.childDob && <p className="text-xs text-destructive">{errors.childDob}</p>}
                         </div>

@@ -2,15 +2,19 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, Bell, FileText, ScrollText, Sparkles, Calendar, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { PageHeader } from "@/components/AppShell";
+import { PageHeader } from "@/components/PageHeader";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { apiJson } from "@/lib/api";
 import { mapApplicationListRow } from "@/lib/applicationMap";
+import { EmptyState } from "@/components/EmptyState";
+import { KpiCard } from "@/components/KpiCard";
+import { ContentCard } from "@/components/ContentCard";
+import { LoadingSkeleton } from "@/components/LoadingSkeleton";
 const CitizenDashboard = () => {
     const { user } = useAuth();
-    const { data: myApps = [] } = useQuery({
+    const { data: myApps = [], isLoading: appsLoading } = useQuery({
         queryKey: ["applications", "my", user?.id],
         queryFn: async () => {
             const rows = await apiJson("/api/applications/my");
@@ -70,15 +74,15 @@ const CitizenDashboard = () => {
             <Link to="/citizen/services"><Sparkles className="mr-1.5 h-4 w-4"/> Start a new application</Link>
           </Button>}/>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {kpis.map((k) => (<div key={k.label} className="rounded-2xl border border-border bg-card p-5 shadow-soft">
-            <div className="flex items-center justify-between">
-              <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">{k.label}</p>
-              <span className={`grid h-9 w-9 place-items-center rounded-lg ${k.tone}`}><k.icon className="h-4 w-4"/></span>
-            </div>
-            <p className="mt-3 font-display text-3xl font-semibold">{k.value}</p>
-          </div>))}
-      </div>
+      {appsLoading ? (
+        <LoadingSkeleton />
+      ) : (
+        <>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {kpis.map((k) => (
+              <KpiCard key={k.label} label={k.label} value={k.value} icon={k.icon} toneClass={k.tone} />
+            ))}
+          </div>
 
       <div className="mt-6 grid gap-4 lg:grid-cols-3">
         <div className="rounded-2xl border border-border bg-card p-6 shadow-soft lg:col-span-2">
@@ -86,7 +90,7 @@ const CitizenDashboard = () => {
             <h2 className="font-display text-xl font-semibold">Recent applications</h2>
             <Link to="/citizen/applications" className="text-sm font-medium text-primary hover:underline">View all <ArrowRight className="inline h-3.5 w-3.5"/></Link>
           </div>
-          {myApps.length === 0 ? (<EmptyState title="No applications yet" description="Start your first application to see real-time status updates here." cta={<Button asChild><Link to="/citizen/services">Browse services</Link></Button>}/>) : (<ul className="mt-4 divide-y divide-border">
+          {myApps.length === 0 ? (<EmptyState title="No applications yet" description="Start your first application to see real-time status updates here." action={<Button asChild><Link to="/citizen/services">Browse services</Link></Button>}/>) : (<ul className="mt-4 divide-y divide-border">
               {myApps.slice(0, 5).map((a) => (<li key={a.id}>
                   <Link to={`/citizen/applications/${a.id}`} className="flex items-center justify-between py-3 transition-colors hover:bg-secondary/40 -mx-3 px-3 rounded-lg">
                     <div className="min-w-0">
@@ -100,33 +104,26 @@ const CitizenDashboard = () => {
         </div>
 
         <div className="space-y-4">
-          <div className="rounded-2xl border border-border bg-card p-6 shadow-soft">
-            <h2 className="font-display text-lg font-semibold">Next appointment</h2>
+          <ContentCard title="Next appointment">
             {upcoming?.appointment ? (<div className="mt-3">
                 <p className="font-display text-base font-semibold">{upcoming.appointment.office}</p>
                 <p className="mt-1 text-sm text-muted-foreground">{format(new Date(upcoming.appointment.date), "EEEE, MMMM d")} · {upcoming.appointment.timeSlot}</p>
                 <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-accent/15 px-2.5 py-1 text-xs font-medium text-accent-foreground">
                   <Calendar className="h-3.5 w-3.5"/> Queue #{upcoming.appointment.queueNumber}
                 </div>
-              </div>) : (<p className="mt-3 text-sm text-muted-foreground">No appointments scheduled.</p>)}
-          </div>
-          <div className="rounded-2xl border border-border bg-card p-6 shadow-soft">
-            <h2 className="font-display text-lg font-semibold">Latest announcement</h2>
+              </div>) : (<p className="text-sm text-muted-foreground">No appointments scheduled.</p>)}
+          </ContentCard>
+          <ContentCard title="Latest announcement">
             {ann[0] ? (<div className="mt-3">
                 <p className="font-medium">{ann[0].title}</p>
                 <p className="mt-1 text-sm text-muted-foreground line-clamp-3">{ann[0].body}</p>
                 <Link to="/citizen/announcements" className="mt-3 inline-block text-sm font-medium text-primary hover:underline">Read more</Link>
-              </div>) : (<p className="mt-3 text-sm text-muted-foreground">No announcements yet.</p>)}
-          </div>
+              </div>) : (<p className="text-sm text-muted-foreground">No announcements yet.</p>)}
+          </ContentCard>
         </div>
       </div>
+      </>
+      )}
     </>);
 };
-export function EmptyState({ title, description, cta }) {
-    return (<div className="mt-6 flex flex-col items-center rounded-xl border border-dashed border-border bg-secondary/30 p-10 text-center">
-      <p className="font-display text-lg font-semibold">{title}</p>
-      <p className="mt-1 max-w-sm text-sm text-muted-foreground">{description}</p>
-      {cta && <div className="mt-4">{cta}</div>}
-    </div>);
-}
 export default CitizenDashboard;

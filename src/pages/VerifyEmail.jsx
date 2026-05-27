@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { apiJson } from "@/lib/api";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 export default function VerifyEmail() {
   const [search] = useSearchParams();
@@ -19,18 +20,22 @@ export default function VerifyEmail() {
   }, [search]);
 
   return (
-    <div className="min-h-screen bg-cream-grad p-6">
-      <div className="mx-auto mt-16 max-w-xl rounded-2xl border border-border bg-card p-8 shadow-soft">
-        <h1 className="font-display text-2xl font-semibold">Email verification</h1>
-        <p className={`mt-3 text-sm ${state.ok ? "text-emerald-700" : "text-muted-foreground"}`}>
-          {state.loading ? "Verifying your email..." : state.message}
-        </p>
-        <div className="mt-6">
-          <Button asChild>
-            <Link to="/login">Go to login</Link>
-          </Button>
-        </div>
-      </div>
+    <div className="flex min-h-screen items-center justify-center bg-background p-6">
+      <Card className="w-full max-w-md border-border shadow-soft">
+        <CardHeader className="text-center">
+          <CardTitle className="font-display text-2xl font-semibold">Email verification</CardTitle>
+          <CardDescription>
+            {state.loading ? "Verifying your email..." : state.message}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex justify-center pt-2">
+          {!state.loading && (
+            <Button asChild>
+              <Link to="/login">Go to login</Link>
+            </Button>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

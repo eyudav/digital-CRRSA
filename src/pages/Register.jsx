@@ -5,6 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Logo } from "@/components/Logo";
 import { toast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -69,9 +70,12 @@ const Register = () => {
         <div className="min-h-screen bg-cream-grad">
             <div className="container py-8"><Logo /></div>
             <div className="container max-w-2xl pb-16">
-                <div className="rounded-2xl border border-border bg-card p-8 shadow-elegant md:p-10">
-                    <h1 className="font-display text-3xl font-semibold tracking-tight">Create your account</h1>
-                    <p className="mt-2 text-sm text-muted-foreground">Register once to access all civil registration services.</p>
+                <Card className="border-border shadow-elegant">
+                    <CardHeader className="p-8 pb-0 md:p-10 md:pb-0">
+                        <CardTitle className="font-display text-3xl font-semibold tracking-tight">Create your account</CardTitle>
+                        <CardDescription className="text-sm">Register once to access all civil registration services.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-8 md:p-10 pt-4 md:pt-4">
 
                     <form onSubmit={onSubmit} className="mt-8 grid gap-5 md:grid-cols-2">
                         <div className="space-y-1.5 md:col-span-2">
@@ -171,7 +175,8 @@ const Register = () => {
                     <p className="mt-8 text-center text-sm text-muted-foreground">
                         Already have an account? <Link to="/login" className="font-medium text-primary hover:underline">Sign in</Link>
                     </p>
-                </div>
+                    </CardContent>
+                </Card>
             </div>
         </div>
     );

@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { PageHeader } from "@/components/AppShell";
+import { PageHeader } from "@/components/PageHeader";
+import { ContentCard } from "@/components/ContentCard";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -57,9 +58,9 @@ function UserRoleColumn({
 
   return (
     <section
-      className={`flex min-h-[320px] flex-col rounded-2xl border border-border bg-card shadow-soft ${toneClass}`}
+      className={`flex min-h-[320px] flex-col rounded-2xl border border-border bg-card shadow-soft transition-all hover:shadow-elegant ${toneClass}`}
     >
-      <div className="border-b border-border p-4">
+      <div className="border-b border-border p-5">
         <h2 className="font-display text-lg font-semibold">{title}</h2>
         <p className="text-xs text-muted-foreground">{users.length} accounts</p>
         <div className="relative mt-3">
@@ -84,7 +85,7 @@ function UserRoleColumn({
           {filtered.map((u) => (
             <li
               key={u.id}
-              className="rounded-xl border border-border/80 bg-background/60 p-3 text-sm shadow-sm"
+              className="rounded-xl border border-border bg-card p-4 shadow-sm"
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
@@ -238,9 +239,9 @@ export default function AdminUsers() {
         }
       />
 
-      <div className="mb-6 rounded-2xl border border-border bg-card p-6 shadow-soft">
-        <h2 className="font-display text-lg font-semibold">Create user</h2>
-        <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="mb-6">
+        <ContentCard title="Create user">
+          <div className="mt-2 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <div className="space-y-1.5">
             <Label>Full name</Label>
             <Input value={form.fullName} onChange={(e) => setForm((f) => ({ ...f, fullName: e.target.value }))} />
@@ -286,6 +287,7 @@ export default function AdminUsers() {
         >
           Create user
         </Button>
+        </ContentCard>
       </div>
 
       <div className="grid gap-5 xl:grid-cols-3">
@@ -348,9 +350,9 @@ export default function AdminUsers() {
         />
       </div>
 
-      <section className="mt-8 rounded-2xl border border-border bg-card p-6 shadow-soft">
-        <h2 className="font-display text-lg font-semibold">Audit logs</h2>
-        <div className="mt-3 max-h-64 space-y-2 overflow-y-auto">
+      <section className="mt-8">
+        <ContentCard title="Audit logs">
+          <div className="mt-1 max-h-64 space-y-3 overflow-y-auto pr-2">
           {logs.slice(0, 50).map((l) => (
             <div key={l.id} className="rounded-lg border border-border p-3 text-sm">
               <p className="font-medium">{l.action}</p>
@@ -360,7 +362,8 @@ export default function AdminUsers() {
               </p>
             </div>
           ))}
-        </div>
+          </div>
+        </ContentCard>
       </section>
 
       <Dialog open={!!viewUser} onOpenChange={(o) => !o && setViewUser(null)}>

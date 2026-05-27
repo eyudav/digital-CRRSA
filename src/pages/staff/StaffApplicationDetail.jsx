@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Check, FileText, MessageSquare, ScrollText, ShieldX, Upload, UserCheck, X } from "lucide-react";
-import { PageHeader } from "@/components/AppShell";
+import { PageHeader } from "@/components/PageHeader";
+import { ContentCard } from "@/components/ContentCard";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -99,7 +100,7 @@ const StaffApplicationDetail = () => {
 
       <div className="grid gap-5 lg:grid-cols-3">
         <div className="space-y-5 lg:col-span-2">
-          <Card title="Submitted details" icon={FileText}>
+          <ContentCard title="Submitted details" icon={FileText}>
             <dl className="grid gap-4 text-sm md:grid-cols-2">
               {Object.entries(app.formData).map(([k, v]) => {
                 if (k === "appointmentMetadata") return null;
@@ -125,10 +126,10 @@ const StaffApplicationDetail = () => {
                 );
               })}
             </dl>
-          </Card>
+          </ContentCard>
 
           {app.formData.appointmentMetadata && (
-            <Card title="Appointment Confirmations" icon={UserCheck}>
+            <ContentCard title="Appointment Confirmations" icon={UserCheck}>
               <dl className="grid gap-4 text-sm md:grid-cols-2">
                 {Object.entries(app.formData.appointmentMetadata).map(([k, v]) => {
                   if (v === null || v === "") return null;
@@ -143,10 +144,10 @@ const StaffApplicationDetail = () => {
                   );
                 })}
               </dl>
-            </Card>
+            </ContentCard>
           )}
 
-          <Card title="Documents" icon={Upload}>
+          <ContentCard title="Documents" icon={Upload}>
             {app.documents.length === 0 ? <p className="text-sm text-muted-foreground">Citizen has not uploaded documents yet.</p> : (<ul className="divide-y divide-border">
                 {app.documents.map((d) => (<li key={d.id} className="flex items-center justify-between gap-3 py-3 text-sm">
                     <div className="min-w-0">
@@ -165,17 +166,17 @@ const StaffApplicationDetail = () => {
                     </div>
                   </li>))}
               </ul>)}
-          </Card>
+          </ContentCard>
 
-          <Card title="Add comment / request documents" icon={MessageSquare}>
+          <ContentCard title="Add comment / request documents" icon={MessageSquare}>
             <Textarea rows={3} placeholder="Write a note to the citizen or an internal review comment..." value={comment} onChange={(e) => setComment(e.target.value)}/>
             <div className="mt-3 flex flex-wrap justify-end gap-2">
               <Button variant="outline" onClick={addComment} disabled={patchStatus.isPending}>Add comment</Button>
               <Button onClick={requestDocs} className="bg-warning text-warning-foreground hover:bg-warning/90" disabled={patchStatus.isPending}>Request more documents</Button>
             </div>
-          </Card>
+          </ContentCard>
 
-          <Card title="Status timeline" icon={ScrollText}>
+          <ContentCard title="Status timeline" icon={ScrollText}>
             <ol className="relative ml-3 space-y-5 border-l border-border pl-6">
               {app.timeline.map((t) => (<li key={t.id} className="relative">
                   <span className="absolute -left-[31px] grid h-5 w-5 place-items-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">●</span>
@@ -183,11 +184,11 @@ const StaffApplicationDetail = () => {
                   <p className="text-xs text-muted-foreground">{format(new Date(t.at), "MMM d, yyyy · HH:mm")} · {t.by}</p>
                 </li>))}
             </ol>
-          </Card>
+          </ContentCard>
         </div>
 
         <div className="space-y-5">
-          <Card title="Decision" icon={Check}>
+          <ContentCard title="Decision" icon={Check}>
             <p className="text-sm text-muted-foreground">Mark this application's outcome. Citizens are notified automatically.</p>
             <div className="mt-4 grid gap-2">
               <Button onClick={() => setStatus("under_review", "Application is now under officer review.")} variant="outline" disabled={patchStatus.isPending}>Mark under review</Button>
@@ -197,23 +198,15 @@ const StaffApplicationDetail = () => {
                 <ShieldX className="mr-1 h-4 w-4"/> Reject
               </Button>
             </div>
-          </Card>
-          {app.appointment && (<Card title="Appointment" icon={ScrollText}>
+          </ContentCard>
+          {app.appointment && (<ContentCard title="Appointment" icon={ScrollText}>
               <p className="font-display text-base font-semibold">{app.appointment.office}</p>
               <p className="mt-1 text-sm text-muted-foreground">{format(new Date(app.appointment.date), "EEEE, MMMM d")} · {app.appointment.timeSlot}</p>
               <p className="mt-2 text-xs text-muted-foreground">Queue #{app.appointment.queueNumber}</p>
-            </Card>)}
+            </ContentCard>)}
         </div>
       </div>
     </>);
 };
-function Card({ title, icon: Icon, children }) {
-    return (<div className="rounded-2xl border border-border bg-card p-6 shadow-soft">
-      <div className="mb-4 flex items-center gap-2">
-        <Icon className="h-4 w-4 text-primary"/>
-        <h2 className="font-display text-lg font-semibold">{title}</h2>
-      </div>
-      {children}
-    </div>);
-}
+
 export default StaffApplicationDetail;

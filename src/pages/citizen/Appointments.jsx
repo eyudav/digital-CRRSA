@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import { PageHeader } from "@/components/AppShell";
+import { PageHeader } from "@/components/PageHeader";
 import { CalendarCheck } from "lucide-react";
 import { format } from "date-fns";
-import { EmptyState } from "./CitizenDashboard";
+import { EmptyState } from "@/components/EmptyState";
 import { apiJson } from "@/lib/api";
 import { mapApplicationListRow } from "@/lib/applicationMap";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -62,7 +62,7 @@ const Appointments = () => {
       ) : withAppt.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2">
           {withAppt.map((a) => (
-            <div key={a.id} className="rounded-2xl border border-border bg-card p-6 shadow-soft">
+            <div key={a.id} className="rounded-2xl border border-border bg-card p-6 shadow-soft transition-all hover:shadow-elegant">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <p className="text-xs font-medium uppercase tracking-[0.16em] text-primary">{a.serviceName}</p>
@@ -76,18 +76,17 @@ const Appointments = () => {
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <StatusBadge status={a.status} />
               </div>
-              <div className="mt-4 flex items-center gap-2 text-sm">
+              <div className="mt-4 flex items-center gap-2 text-sm bg-secondary/30 p-3 rounded-lg">
                 <CalendarCheck className="h-4 w-4 shrink-0 text-primary" />
-                <span>
+                <span className="font-medium text-foreground">
                   {format(new Date(a.appointment.date), "EEEE, MMMM d")} · {a.appointment.timeSlot}
                 </span>
               </div>
-              <Link
-                to={`/citizen/applications/${a.id}`}
-                className="mt-4 inline-block text-sm font-medium text-primary hover:underline"
-              >
-                View application
-              </Link>
+              <Button asChild variant="outline" className="mt-4 w-full">
+                <Link to={`/citizen/applications/${a.id}`}>
+                  View application
+                </Link>
+              </Button>
             </div>
           ))}
         </div>

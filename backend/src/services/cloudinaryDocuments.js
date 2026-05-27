@@ -1,3 +1,4 @@
+import streamifier from "streamifier";
 import { cloudinary } from "../config/cloudinary.js";
 import { env } from "../config/env.js";
 
@@ -9,13 +10,23 @@ function assertCloudinarySecret() {
 
 export async function uploadCitizenDocument(file) {
   assertCloudinarySecret();
-  const dataUri = `data:${file.mimetype};base64,${file.buffer.toString("base64")}`;
-  const uploaded = await cloudinary.uploader.upload(dataUri, {
-    folder: "citizen_documents",
-    resource_type: "auto",
-    use_filename: true,
-    filename_override: file.originalname,
-    unique_filename: true,
+
+  const uploaded = await new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        folder: "citizen_documents",
+        resource_type: "auto",
+        use_filename: true,
+        filename_override: file.originalname,
+        unique_filename: true,
+      },
+      (error, result) => {
+        if (error) return reject(error);
+        resolve(result);
+      }
+    );
+
+    streamifier.createReadStream(file.buffer).pipe(stream);
   });
 
   return {
@@ -28,6 +39,7 @@ export async function uploadCitizenDocument(file) {
 export function optimizedCloudinaryUrl(publicId, mimeType = "") {
   if (!publicId) return null;
   if (!String(mimeType).startsWith("image/")) return null;
+
   return cloudinary.url(publicId, {
     fetch_format: "auto",
     quality: "auto",
@@ -36,6 +48,7 @@ export function optimizedCloudinaryUrl(publicId, mimeType = "") {
 
 export function cloudinaryDownloadUrl(publicId, originalName = "document") {
   if (!publicId) return null;
+
   return cloudinary.url(publicId, {
     resource_type: "auto",
     type: "upload",

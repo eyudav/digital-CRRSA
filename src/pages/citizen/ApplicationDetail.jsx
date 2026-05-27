@@ -2,7 +2,8 @@ import { Link, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, CalendarCheck, FileText, MessageSquare, ScrollText, Upload } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { PageHeader } from "@/components/AppShell";
+import { PageHeader } from "@/components/PageHeader";
+import { ContentCard } from "@/components/ContentCard";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
@@ -57,16 +58,16 @@ const ApplicationDetail = () => {
 
       <div className="grid gap-5 lg:grid-cols-3">
         <div className="space-y-5 lg:col-span-2">
-          <Card title="Submitted details" icon={FileText}>
+          <ContentCard title="Submitted details" icon={FileText}>
             <dl className="grid gap-3 text-sm md:grid-cols-2">
               {Object.entries(app.formData).map(([k, v]) => (<div key={k}>
                   <dt className="text-xs uppercase tracking-wider text-muted-foreground">{k.replace(/([A-Z])/g, " $1")}</dt>
                   <dd className="font-medium">{String(v)}</dd>
                 </div>))}
             </dl>
-          </Card>
+          </ContentCard>
 
-          <Card title="Documents" icon={Upload}>
+          <ContentCard title="Documents" icon={Upload}>
             {app.documents.length === 0 ? <p className="text-sm text-muted-foreground">No documents yet.</p> : (<ul className="divide-y divide-border">
                 {app.documents.map((d) => (<li key={d.id} className="flex items-center justify-between py-2.5 text-sm">
                     <div>
@@ -80,9 +81,9 @@ const ApplicationDetail = () => {
               <Upload className="h-4 w-4"/> Upload more
               <input type="file" multiple className="hidden" onChange={(e) => onFiles(e.target.files)} accept=".jpg,.jpeg,.png,.pdf" disabled={uploadMutation.isPending}/>
             </label>
-          </Card>
+          </ContentCard>
 
-          <Card title="Status timeline" icon={ScrollText}>
+          <ContentCard title="Status timeline" icon={ScrollText}>
             <ol className="relative ml-3 space-y-5 border-l border-border pl-6">
               {app.timeline.map((t) => (<li key={t.id} className="relative">
                   <span className="absolute -left-[31px] grid h-5 w-5 place-items-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">●</span>
@@ -90,33 +91,25 @@ const ApplicationDetail = () => {
                   <p className="text-xs text-muted-foreground">{format(new Date(t.at), "MMM d, yyyy · HH:mm")} · {t.by}</p>
                 </li>))}
             </ol>
-          </Card>
+          </ContentCard>
         </div>
 
         <div className="space-y-5">
-          {app.appointment && (<Card title="Appointment" icon={CalendarCheck}>
+          {app.appointment && (<ContentCard title="Appointment" icon={CalendarCheck}>
               <p className="font-display text-base font-semibold">{app.appointment.office}</p>
               <p className="mt-1 text-sm text-muted-foreground">{format(new Date(app.appointment.date), "EEEE, MMMM d")} · {app.appointment.timeSlot}</p>
               <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-accent/15 px-2.5 py-1 text-xs font-medium">Queue #{app.appointment.queueNumber}</div>
               <Button variant="outline" size="sm" className="mt-4 w-full" asChild>
                 <Link to="/citizen/appointments">Reschedule</Link>
               </Button>
-            </Card>)}
-          <Card title="Fee" icon={MessageSquare}>
+            </ContentCard>)}
+          <ContentCard title="Fee" icon={MessageSquare}>
             <p className="font-display text-2xl font-semibold">{app.fee} <span className="text-base font-normal text-muted-foreground">ETB</span></p>
             <p className="mt-1 text-xs text-muted-foreground">Payable at the office on collection.</p>
-          </Card>
+          </ContentCard>
         </div>
       </div>
     </>);
 };
-function Card({ title, icon: Icon, children }) {
-    return (<div className="rounded-2xl border border-border bg-card p-6 shadow-soft">
-      <div className="mb-4 flex items-center gap-2">
-        <Icon className="h-4 w-4 text-primary"/>
-        <h2 className="font-display text-lg font-semibold">{title}</h2>
-      </div>
-      {children}
-    </div>);
-}
+
 export default ApplicationDetail;

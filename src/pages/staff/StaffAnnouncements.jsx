@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { PageHeader } from "@/components/AppShell";
+import { PageHeader } from "@/components/PageHeader";
+import { ContentCard } from "@/components/ContentCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -122,49 +123,50 @@ export default function StaffAnnouncements() {
       />
 
       <div className="grid gap-5 lg:grid-cols-3">
-        <div className="rounded-2xl border border-border bg-card p-6 shadow-soft lg:col-span-1">
-          <h2 className="font-display text-lg font-semibold">New announcement</h2>
-          <div className="mt-4 space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="title">Title</Label>
-              <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} />
+        <div className="lg:col-span-1 h-fit">
+          <ContentCard title="New announcement">
+            <div className="mt-2 space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="title">Title</Label>
+                <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Category</Label>
+                <Select value={category} onValueChange={(v) => setCategory(v)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="general">General</SelectItem>
+                    <SelectItem value="service_update">Service update</SelectItem>
+                    <SelectItem value="deadline">Deadline</SelectItem>
+                    <SelectItem value="interruption">Interruption</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="body">Body</Label>
+                <Textarea id="body" rows={6} value={body} onChange={(e) => setBody(e.target.value)} />
+              </div>
+              <div className="flex flex-col gap-2 pt-2">
+                <Button
+                  className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+                  onClick={publish}
+                  disabled={postMutation.isPending}
+                >
+                  <Send className="mr-2 h-4 w-4" />
+                  Publish
+                </Button>
+                <Button variant="outline" className="w-full" onClick={saveDraft} disabled={postMutation.isPending}>
+                  <FileEdit className="mr-2 h-4 w-4" />
+                  Save as draft
+                </Button>
+              </div>
             </div>
-            <div className="space-y-1.5">
-              <Label>Category</Label>
-              <Select value={category} onValueChange={(v) => setCategory(v)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="general">General</SelectItem>
-                  <SelectItem value="service_update">Service update</SelectItem>
-                  <SelectItem value="deadline">Deadline</SelectItem>
-                  <SelectItem value="interruption">Interruption</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="body">Body</Label>
-              <Textarea id="body" rows={6} value={body} onChange={(e) => setBody(e.target.value)} />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Button
-                className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
-                onClick={publish}
-                disabled={postMutation.isPending}
-              >
-                <Send className="mr-2 h-4 w-4" />
-                Publish
-              </Button>
-              <Button variant="outline" className="w-full" onClick={saveDraft} disabled={postMutation.isPending}>
-                <FileEdit className="mr-2 h-4 w-4" />
-                Save as draft
-              </Button>
-            </div>
-          </div>
+          </ContentCard>
         </div>
 
-        <div className="space-y-3 lg:col-span-2">
+        <div className="space-y-4 lg:col-span-2">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className="font-display text-lg font-semibold">All announcements</h2>
             <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isLoading}>
@@ -182,70 +184,72 @@ export default function StaffAnnouncements() {
               No announcements yet. Publish one using the form on the left.
             </p>
           )}
-          {list.map((a) => (
-            <article key={a.id} className="rounded-2xl border border-border bg-card p-5 shadow-soft">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div className="flex min-w-0 flex-1 gap-3">
-                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-emerald-grad text-primary-foreground">
-                    <Megaphone className="h-4 w-4" />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="font-display text-base font-semibold">{a.title}</h3>
-                      <Badge variant="outline" className="text-[10px]">
-                        {a.category}
-                      </Badge>
-                      {a.published ? (
-                        <Badge className="bg-success/15 text-success hover:bg-success/20">Live</Badge>
-                      ) : (
-                        <Badge variant="secondary">Draft</Badge>
-                      )}
+          <div className="space-y-3">
+            {list.map((a) => (
+              <article key={a.id} className="rounded-2xl border border-border bg-card p-5 shadow-soft transition-all hover:shadow-elegant">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="flex min-w-0 flex-1 gap-3">
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-emerald-grad text-primary-foreground shadow-soft">
+                      <Megaphone className="h-5 w-5" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="font-display text-base font-semibold text-foreground">{a.title}</h3>
+                        <Badge variant="outline" className="text-[10px]">
+                          {a.category.replace("_", " ")}
+                        </Badge>
+                        {a.published ? (
+                          <Badge className="bg-success/15 text-success hover:bg-success/20">Live</Badge>
+                        ) : (
+                          <Badge variant="secondary">Draft</Badge>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {format(new Date(a.createdAt), "MMM d, yyyy")}
+                      </p>
+                      <p className="mt-2 line-clamp-3 text-sm text-muted-foreground">{a.body}</p>
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      {format(new Date(a.createdAt), "MMM d, yyyy")}
-                    </p>
-                    <p className="mt-2 line-clamp-3 text-sm">{a.body}</p>
+                  </div>
+                  <div className="flex shrink-0 flex-wrap gap-2">
+                    <Button variant="outline" size="sm" onClick={() => setViewRow(a)}>
+                      <Eye className="mr-1 h-3.5 w-3.5" />
+                      View
+                    </Button>
+                    {canEditItem(a) && (
+                      <>
+                        <Button variant="outline" size="sm" onClick={() => setEditRow(a)}>
+                          <Pencil className="mr-1 h-3.5 w-3.5" />
+                          Edit
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            patchMutation.mutate({
+                              id: a.id,
+                              body: { published: !a.published },
+                            })
+                          }
+                          disabled={patchMutation.isPending}
+                        >
+                          {a.published ? "Unpublish" : "Publish"}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-destructive hover:bg-destructive/10"
+                          onClick={() => setDeleteId(a.id)}
+                        >
+                          <Trash2 className="mr-1 h-3.5 w-3.5" />
+                          Delete
+                        </Button>
+                      </>
+                    )}
                   </div>
                 </div>
-                <div className="flex shrink-0 flex-wrap gap-2">
-                  <Button variant="outline" size="sm" onClick={() => setViewRow(a)}>
-                    <Eye className="mr-1 h-3.5 w-3.5" />
-                    View
-                  </Button>
-                  {canEditItem(a) && (
-                    <>
-                      <Button variant="outline" size="sm" onClick={() => setEditRow(a)}>
-                        <Pencil className="mr-1 h-3.5 w-3.5" />
-                        Edit
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          patchMutation.mutate({
-                            id: a.id,
-                            body: { published: !a.published },
-                          })
-                        }
-                        disabled={patchMutation.isPending}
-                      >
-                        {a.published ? "Unpublish" : "Publish"}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-destructive hover:bg-destructive/10"
-                        onClick={() => setDeleteId(a.id)}
-                      >
-                        <Trash2 className="mr-1 h-3.5 w-3.5" />
-                        Delete
-                      </Button>
-                    </>
-                  )}
-                </div>
-              </div>
-            </article>
-          ))}
+              </article>
+            ))}
+          </div>
         </div>
       </div>
 

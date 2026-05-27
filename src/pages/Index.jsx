@@ -1,7 +1,9 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, BadgeCheck, Building2, CalendarCheck, FileSignature, Languages, Lock, ScrollText, Sparkles } from "lucide-react";
 import { Logo } from "@/components/Logo";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SERVICES } from "@/data/seed";
 import { useAuth } from "@/context/AuthContext";
 const HIGHLIGHTS = [
@@ -28,7 +30,8 @@ const Index = () => {
             <a href="#how" className="hover:text-foreground">How it works</a>
             <a href="#trust" className="hover:text-foreground">Security</a>
           </nav>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 md:gap-4">
+            <ThemeToggle />
             {user ? (
               <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90">
                 <Link to={user.role === 'citizen' ? '/citizen' : user.role === 'admin' ? '/staff/admin/users' : '/staff'}>Go to Dashboard</Link>
@@ -117,13 +120,17 @@ const Index = () => {
       {/* Highlights */}
       <section className="container py-20">
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {HIGHLIGHTS.map((h) => (<div key={h.title} className="rounded-2xl border border-border bg-card p-6 shadow-soft transition-shadow hover:shadow-elegant">
-              <span className="grid h-10 w-10 place-items-center rounded-lg bg-emerald-grad text-primary-foreground">
-                <h.icon className="h-5 w-5"/>
-              </span>
-              <h3 className="mt-4 font-display text-lg font-semibold">{h.title}</h3>
-              <p className="mt-1.5 text-sm text-muted-foreground">{h.body}</p>
-            </div>))}
+          {HIGHLIGHTS.map((h) => (
+            <Card key={h.title} className="rounded-2xl shadow-soft transition-all hover:shadow-elegant hover:-translate-y-1">
+              <CardContent className="p-6">
+                <span className="grid h-10 w-10 place-items-center rounded-lg bg-emerald-grad text-primary-foreground">
+                  <h.icon className="h-5 w-5"/>
+                </span>
+                <h3 className="mt-4 font-display text-lg font-semibold">{h.title}</h3>
+                <p className="mt-1.5 text-sm text-muted-foreground">{h.body}</p>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </section>
 
@@ -138,12 +145,16 @@ const Index = () => {
             <p className="max-w-md text-sm text-muted-foreground">From birth and marriage certificates to residency transfers — request what you need without leaving home.</p>
           </div>
           <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {SERVICES.map((s) => (<div key={s.id} className="group rounded-xl border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:shadow-soft">
-                <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-primary">{s.category}</p>
-                <h3 className="mt-2 font-display text-lg font-semibold">{s.name}</h3>
-                <p className="mt-1.5 text-sm text-muted-foreground line-clamp-2">{s.description}</p>
-                <p className="mt-4 text-xs text-muted-foreground">~{s.processingDays} days · {s.fee} ETB</p>
-              </div>))}
+            {SERVICES.map((s) => (
+              <Card key={s.id} className="group rounded-xl transition-all hover:-translate-y-1 hover:shadow-soft">
+                <CardContent className="p-5">
+                  <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-primary">{s.category}</p>
+                  <h3 className="mt-2 font-display text-lg font-semibold">{s.name}</h3>
+                  <p className="mt-1.5 text-sm text-muted-foreground line-clamp-2">{s.description}</p>
+                  <p className="mt-4 text-xs text-muted-foreground">~{s.processingDays} days · {s.fee} ETB</p>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
       </section>

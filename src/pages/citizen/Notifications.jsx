@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/context/AuthContext";
-import { PageHeader } from "@/components/AppShell";
+import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Bell, CalendarCheck, FileText, Megaphone } from "lucide-react";
 import { format } from "date-fns";
-import { EmptyState } from "./CitizenDashboard";
+import { EmptyState } from "@/components/EmptyState";
+import { Card, CardContent } from "@/components/ui/card";
 import { apiJson } from "@/lib/api";
 
 const READ_KEY = "crrsa-notif-read";
@@ -50,21 +51,24 @@ const Notifications = () => {
     };
     return (<>
       <PageHeader title="Notifications" description="Status changes, document requests, appointment reminders and more." actions={<Button variant="outline" onClick={markAll}>Mark all as read</Button>}/>
-      {list.length === 0 ? <EmptyState title="No notifications yet" description="You'll see status updates and reminders here."/> : (<ul className="space-y-2">
+      {list.length === 0 ? <EmptyState title="No notifications yet" description="You'll see status updates and reminders here."/> : (<div className="space-y-3">
           {list.map((n) => {
                 const Icon = ICONS[n.type] || Bell;
                 const read = readIds.has(n.id);
-                return (<li key={n.id} className={`flex items-start gap-3 rounded-2xl border p-4 ${read ? "border-border bg-card" : "border-primary/30 bg-primary/5"}`}>
-                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-emerald-grad text-primary-foreground"><Icon className="h-4 w-4"/></span>
-                <div className="min-w-0 flex-1">
-                  <p className="font-medium">{n.title}</p>
-                  <p className="text-sm text-muted-foreground">{n.message}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">{format(new Date(n.createdAt), "MMM d, HH:mm")}</p>
-                </div>
-                {!read && <span className="mt-1.5 h-2 w-2 rounded-full bg-primary"/>}
-              </li>);
+                return (
+                <Card key={n.id} className={`transition-all ${read ? "border-border shadow-sm" : "border-primary/30 bg-primary/5 shadow-soft"}`}>
+                  <CardContent className="p-4 flex items-start gap-4">
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-emerald-grad text-primary-foreground shadow-soft"><Icon className="h-5 w-5"/></span>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-foreground">{n.title}</p>
+                      <p className="text-sm text-muted-foreground mt-0.5">{n.message}</p>
+                      <p className="mt-1.5 text-xs text-muted-foreground">{format(new Date(n.createdAt), "MMM d, HH:mm")}</p>
+                    </div>
+                    {!read && <span className="mt-2 h-2.5 w-2.5 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary),0.6)]"/>}
+                  </CardContent>
+                </Card>);
             })}
-        </ul>)}
+        </div>)}
     </>);
 };
 export default Notifications;

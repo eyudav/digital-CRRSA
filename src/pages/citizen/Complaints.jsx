@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/context/AuthContext";
-import { PageHeader } from "@/components/AppShell";
+import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -66,7 +66,7 @@ const Complaints = () => {
     return (<>
       <PageHeader title="Complaints & feedback" description="Report an issue or share feedback. We'll keep you updated on the response."/>
       <div className="grid gap-5 lg:grid-cols-3">
-        <div className="rounded-2xl border border-border bg-card p-6 shadow-soft lg:col-span-1">
+        <div className="rounded-2xl border border-border bg-card p-6 shadow-soft lg:col-span-1 h-fit">
           <h2 className="font-display text-lg font-semibold">Submit new</h2>
           <div className="mt-4 space-y-4">
             <div className="space-y-1.5">
@@ -79,21 +79,23 @@ const Complaints = () => {
               <Textarea id="message" rows={5} value={message} onChange={(e) => setMessage(e.target.value)}/>
               {errors.message && <p className="text-xs text-destructive">{errors.message}</p>}
             </div>
-            <Button onClick={submit} disabled={submitMutation.isPending} className="w-full bg-primary text-primary-foreground hover:bg-primary/90">Send</Button>
+            <Button onClick={submit} disabled={submitMutation.isPending} className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
+              {submitMutation.isPending ? "Sending..." : "Send"}
+            </Button>
           </div>
         </div>
-        <div className="space-y-3 lg:col-span-2">
+        <div className="space-y-4 lg:col-span-2">
           <h2 className="font-display text-lg font-semibold">Your previous complaints</h2>
-          {list.length === 0 ? <p className="text-sm text-muted-foreground">No complaints submitted yet.</p> : list.map((c) => (<article key={c.id} className="rounded-2xl border border-border bg-card p-5 shadow-soft">
+          {list.length === 0 ? <p className="text-sm text-muted-foreground">No complaints submitted yet.</p> : list.map((c) => (<article key={c.id} className="rounded-2xl border border-border bg-card p-6 shadow-soft transition-all hover:shadow-elegant">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h3 className="font-medium">{c.subject}</h3>
-                  <p className="text-xs text-muted-foreground">{format(new Date(c.createdAt), "MMM d, yyyy")}</p>
+                  <h3 className="font-medium text-foreground">{c.subject}</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">{format(new Date(c.createdAt), "MMM d, yyyy")}</p>
                 </div>
                 <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-[0.14em] ${TONE[c.status]}`}>{c.status.replace("_", " ")}</span>
               </div>
-              <p className="mt-3 text-sm text-foreground/90">{c.message}</p>
-              {c.response && <div className="mt-3 rounded-lg bg-secondary/50 p-3 text-sm"><span className="font-medium">Response:</span> {c.response}</div>}
+              <p className="mt-4 text-sm text-muted-foreground">{c.message}</p>
+              {c.response && <div className="mt-4 rounded-xl border border-border bg-secondary/30 p-4 text-sm shadow-inner"><span className="font-semibold text-foreground mb-1 block">Response:</span> <span className="text-muted-foreground">{c.response}</span></div>}
             </article>))}
         </div>
       </div>
