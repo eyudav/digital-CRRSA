@@ -3,7 +3,7 @@ export function notFoundHandler(req, res) {
 }
 
 export function errorHandler(err, req, res, next) {
-  console.error(err);
+  console.error(err?.stack || err?.message || err);
   if (res.headersSent) return next(err);
   if (err?.name === "ZodError") {
     return res.status(400).json({

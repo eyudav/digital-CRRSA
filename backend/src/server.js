@@ -1,5 +1,5 @@
 import app from "./app.js";
-import { env } from "./config/env.js";
+import { env } from "./config/env.js"; // trigger restart
 import { pool } from "./config/db.js";
 
 app.listen(env.port, () => {
