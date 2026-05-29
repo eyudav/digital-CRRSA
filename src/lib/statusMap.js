@@ -1,7 +1,6 @@
 /** Backend application status (Title Case) ↔ UI keys used by StatusBadge */
 const API_TO_UI = {
   Submitted: "submitted",
-  "Under Review": "under_review",
   "Additional Documents Required": "additional_documents_required",
   Approved: "approved",
   Scheduled: "scheduled",

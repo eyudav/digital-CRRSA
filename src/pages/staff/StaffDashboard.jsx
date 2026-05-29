@@ -28,7 +28,7 @@ const StaffDashboard = () => {
         statusUi: complaintApiToUi(c.status),
     }));
     const pending = apps.filter((a) =>
-        ["submitted", "under_review", "additional_documents_required", "approved"].includes(a.status)
+      ["submitted", "additional_documents_required", "approved"].includes(a.status)
     );
     const today = new Date().toISOString().slice(0, 10);
     const todayCount = apps.filter((a) => a.appointment?.date === today).length;

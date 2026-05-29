@@ -1,12 +1,15 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { PageHeader } from "@/components/AppShell";
 import { apiJson } from "@/lib/api";
+import { Input } from "@/components/ui/input";
 
 const SuperAdminLogs = () => {
+    const [logEmailSearch, setLogEmailSearch] = useState("");
     const { data: logs = [] } = useQuery({
-        queryKey: ["superadmin", "audit-logs"],
-        queryFn: () => apiJson("/api/super-admin/audit-logs"),
+        queryKey: ["superadmin", "audit-logs", logEmailSearch],
+        queryFn: () => apiJson(`/api/super-admin/audit-logs?email=${encodeURIComponent(logEmailSearch)}`),
     });
 
     return (
@@ -17,7 +20,17 @@ const SuperAdminLogs = () => {
                 description="Centralized audit log for application events."
             />
             
-            <div className="mt-8 overflow-hidden rounded-2xl border border-border bg-card shadow-soft">
+            <div className="mt-6 max-w-sm">
+                <Input
+                    type="email"
+                    placeholder="Search logs by actor email..."
+                    value={logEmailSearch}
+                    onChange={(e) => setLogEmailSearch(e.target.value)}
+                    className="w-full text-sm"
+                />
+            </div>
+            
+            <div className="mt-4 overflow-hidden rounded-2xl border border-border bg-card shadow-soft">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm text-muted-foreground">
                         <thead className="border-b border-border bg-secondary/50 text-xs uppercase tracking-wider text-foreground">

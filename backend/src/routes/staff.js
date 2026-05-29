@@ -10,11 +10,26 @@ import {
 const router = express.Router();
 router.use(requireAuth, requireRole("staff", "admin", "super_admin"));
 
-router.get("/dashboard", async (_req, res, next) => {
+router.get("/dashboard", async (req, res, next) => {
   try {
-    const { rows } = await query(
-      `select status, count(*)::int as total from applications group by status order by status`
-    );
+    let rows;
+    if (req.user.role === "staff") {
+      const result = await query(
+        `select a.status, count(*)::int as total
+         from applications a
+         join users u on u.id = a.citizen_id
+         where u.sub_city = $1 and u.woreda = $2
+         group by a.status
+         order by a.status`,
+        [req.user.subCity, req.user.woreda]
+      );
+      rows = result.rows;
+    } else {
+      const result = await query(
+        `select status, count(*)::int as total from applications group by status order by status`
+      );
+      rows = result.rows;
+    }
     return res.json({ statusSummary: rows });
   } catch (err) {
     return next(err);
@@ -40,7 +55,6 @@ router.patch("/applications/:id/status", async (req, res, next) => {
     let { status, comment } = req.body || {};
     const allowed = new Set([
       "Submitted",
-      "Under Review",
       "Additional Documents Required",
       "Approved",
       "Rejected",
@@ -51,16 +65,26 @@ router.patch("/applications/:id/status", async (req, res, next) => {
     if (!allowed.has(status)) return res.status(400).json({ message: "Invalid status value" });
 
     const app = await query(
-      `select id, citizen_id, office_code, service_type, form_data from applications where id = $1`,
+      `select a.id, a.citizen_id, a.office_code, a.service_type, a.form_data, u.sub_city, u.woreda
+       from applications a
+       join users u on u.id = a.citizen_id
+       where a.id = $1`,
       [id]
     );
     if (!app.rowCount) return res.status(404).json({ message: "Application not found" });
-    const { citizen_id: citizenId, office_code: officeCode } = app.rows[0];
+    const appData = app.rows[0];
+    const { citizen_id: citizenId, office_code: officeCode, sub_city: citizenSubCity, woreda: citizenWoreda } = appData;
+
+    if (req.user.role === "staff") {
+      if (citizenSubCity !== req.user.subCity || citizenWoreda !== req.user.woreda) {
+        return res.status(403).json({ message: "Forbidden: You can only review applications within your assigned subcity and woreda" });
+      }
+    }
 
     if (status === "Approved") {
       // Sync Residence ID approval to citizen_profiles and users
-      if (app.rows[0].service_type === "Residence ID Services") {
-        const formData = app.rows[0].form_data || {};
+      if (appData.service_type === "Residence ID Services") {
+        const formData = appData.form_data || {};
         const generatedId = "ETH-" + Math.floor(1000 + Math.random() * 9000) + "-" + Math.floor(1000 + Math.random() * 9000);
         
         await query(
@@ -88,7 +112,7 @@ router.patch("/applications/:id/status", async (req, res, next) => {
             formData.phone || null,
             formData.email || null,
             formData.nationality || "Ethiopian",
-            formData.subCity || app.rows[0].office_code.split(" — ").pop() || null,
+            formData.subCity || appData.office_code.split(" — ").pop() || null,
             formData.woreda || null,
             formData.address || null,
             generatedId,
@@ -221,9 +245,21 @@ router.patch("/applications/:applicationId/documents/:documentId", async (req, r
     const documentId = Number(req.params.documentId);
     const verified = Boolean(req.body?.verified);
 
-    const appCheck = await query(`select id from applications where id = $1`, [applicationId]);
+    const appCheck = await query(
+      `select a.id, u.sub_city, u.woreda
+       from applications a
+       join users u on u.id = a.citizen_id
+       where a.id = $1`,
+      [applicationId]
+    );
     if (!appCheck.rowCount) {
       return res.status(404).json({ message: "Application not found" });
+    }
+    if (req.user.role === "staff") {
+      const appData = appCheck.rows[0];
+      if (appData.sub_city !== req.user.subCity || appData.woreda !== req.user.woreda) {
+        return res.status(403).json({ message: "Forbidden: You can only review applications within your assigned subcity and woreda" });
+      }
     }
 
     const { rows } = await query(

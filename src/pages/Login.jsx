@@ -21,13 +21,6 @@ const Login = () => {
     const [password, setPassword] = useState("");
     const [errors, setErrors] = useState({});
     const [submitting, setSubmitting] = useState(false);
-    const [resending, setResending] = useState(false);
-    useEffect(() => {
-        const p = new URLSearchParams(window.location.search);
-        if (p.get("verified") === "1") {
-            toast({ title: "Email verified", description: "Your account is now verified. Please sign in." });
-        }
-    }, []);
     const onSubmit = async (e) => {
         e.preventDefault();
         const parsed = schema.safeParse({ email, password });
@@ -53,26 +46,6 @@ const Login = () => {
                     ? "/staff"
                     : "/citizen";
         nav(dest);
-    };
-    const resendVerification = async () => {
-        if (!email.trim()) {
-            toast({ title: "Email required", description: "Enter your email first.", variant: "destructive" });
-            return;
-        }
-        setResending(true);
-        try {
-            const out = await apiJson("/api/auth/resend-verification", {
-                method: "POST",
-                body: { email },
-            });
-            toast({ title: "Verification email", description: out?.message || "Verification email sent." });
-        }
-        catch (e) {
-            toast({ title: "Failed", description: e.message, variant: "destructive" });
-        }
-        finally {
-            setResending(false);
-        }
     };
     return (<div className="grid min-h-screen lg:grid-cols-2">
       <div className="hidden flex-col justify-between bg-hero p-12 text-primary-foreground lg:flex">
@@ -109,9 +82,6 @@ const Login = () => {
               </div>
               <Button type="submit" disabled={submitting} className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
                 {submitting ? "Signing in..." : "Sign in"}
-              </Button>
-              <Button type="button" variant="outline" onClick={resendVerification} disabled={resending} className="w-full">
-                {resending ? "Sending..." : "Resend verification email"}
               </Button>
             </form>
 

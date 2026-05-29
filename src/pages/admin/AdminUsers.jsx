@@ -99,11 +99,6 @@ function UserRoleColumn({
                     ) : (
                       <Badge variant="secondary">Inactive</Badge>
                     )}
-                    {u.email_verified === false && (
-                      <Badge variant="outline" className="text-[10px]">
-                        Email unverified
-                      </Badge>
-                    )}
                   </div>
                 </div>
               </div>
@@ -183,9 +178,11 @@ export default function AdminUsers() {
   const adminsLoading = adminsMeta.isLoading || (isSuper && superMeta.isLoading);
   const adminsError = adminsMeta.error || superMeta.error;
 
+  const [logEmailSearch, setLogEmailSearch] = useState("");
+
   const { data: logs = [] } = useQuery({
-    queryKey: ["admin", "audit-logs"],
-    queryFn: () => apiJson("/api/admin/audit-logs"),
+    queryKey: ["admin", "audit-logs", logEmailSearch],
+    queryFn: () => apiJson(`/api/admin/audit-logs?email=${encodeURIComponent(logEmailSearch)}`),
   });
 
   const invalidateUsers = () => {
@@ -352,6 +349,15 @@ export default function AdminUsers() {
 
       <section className="mt-8">
         <ContentCard title="Audit logs">
+          <div className="mb-4 max-w-sm">
+            <Input
+              type="email"
+              placeholder="Search by actor email..."
+              value={logEmailSearch}
+              onChange={(e) => setLogEmailSearch(e.target.value)}
+              className="w-full text-sm"
+            />
+          </div>
           <div className="mt-1 max-h-64 space-y-3 overflow-y-auto pr-2">
           {logs.slice(0, 50).map((l) => (
             <div key={l.id} className="rounded-lg border border-border p-3 text-sm">

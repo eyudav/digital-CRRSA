@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Check, FileText, MessageSquare, ScrollText, ShieldX, Upload, UserCheck, X } from "lucide-react";
+import { ArrowLeft, Check, FileText, MessageSquare, ScrollText, ShieldX, Upload, UserCheck } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { ContentCard } from "@/components/ContentCard";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -42,19 +42,7 @@ const StaffApplicationDetail = () => {
         onError: (e) => toast({ title: "Update failed", description: e.message, variant: "destructive" }),
     });
 
-    const verifyMutation = useMutation({
-        mutationFn: ({ docId, verified }) =>
-            apiJson(`/api/staff/applications/${id}/documents/${docId}`, {
-                method: "PATCH",
-                body: { verified },
-            }),
-        onSuccess: () => {
-            qc.invalidateQueries({ queryKey: ["application", id] });
-            qc.invalidateQueries({ queryKey: ["staff", "applications"] });
-            toast({ title: "Document updated" });
-        },
-        onError: (e) => toast({ title: "Failed", description: e.message, variant: "destructive" }),
-    });
+    // document verification mutation removed; verification actions removed from UI
 
     if (isLoading)
         return <p className="p-8 text-sm text-muted-foreground">Loading…</p>;
@@ -70,9 +58,7 @@ const StaffApplicationDetail = () => {
         patchStatus.mutate({ statusUi, message });
     };
 
-    const verify = (docId, value) => {
-        verifyMutation.mutate({ docId, verified: value });
-    };
+    // verify handler removed
 
     const requestDocs = () => {
         if (!comment.trim())
@@ -158,11 +144,6 @@ const StaffApplicationDetail = () => {
                       <Button asChild size="sm" variant="outline">
                         <a href={d.url} target="_blank" rel="noreferrer">View</a>
                       </Button>
-                      {d.downloadUrl && (<Button asChild size="sm" variant="ghost">
-                          <a href={d.downloadUrl} target="_blank" rel="noreferrer">Download</a>
-                        </Button>)}
-                      <span className={`rounded-full px-2 py-0.5 text-xs ${d.verified ? "bg-success/10 text-success" : "bg-warning/15 text-warning-foreground"}`}>{d.verified ? "Verified" : "Pending"}</span>
-                      {d.verified ? (<Button size="sm" variant="ghost" onClick={() => verify(d.id, false)}><X className="h-4 w-4"/></Button>) : (<Button size="sm" variant="outline" onClick={() => verify(d.id, true)}><Check className="mr-1 h-4 w-4"/> Verify</Button>)}
                     </div>
                   </li>))}
               </ul>)}
@@ -191,7 +172,6 @@ const StaffApplicationDetail = () => {
           <ContentCard title="Decision" icon={Check}>
             <p className="text-sm text-muted-foreground">Mark this application's outcome. Citizens are notified automatically.</p>
             <div className="mt-4 grid gap-2">
-              <Button onClick={() => setStatus("under_review", "Application is now under officer review.")} variant="outline" disabled={patchStatus.isPending}>Mark under review</Button>
               <Button onClick={() => setStatus("approved", "Application approved.")} className="bg-success text-success-foreground hover:bg-success/90" disabled={patchStatus.isPending}>Approve</Button>
               <Button onClick={issueCertificate} className="bg-primary text-primary-foreground hover:bg-primary/90" disabled={patchStatus.isPending}>Issue & mark ready</Button>
               <Button onClick={() => setStatus("rejected", "Application rejected.")} variant="outline" className="border-destructive/30 text-destructive hover:bg-destructive/10" disabled={patchStatus.isPending}>

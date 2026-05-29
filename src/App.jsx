@@ -20,7 +20,6 @@ import Appointments from "./pages/citizen/Appointments";
 import Notifications from "./pages/citizen/Notifications";
 import Announcements from "./pages/citizen/Announcements";
 import Complaints from "./pages/citizen/Complaints";
-import Certificates from "./pages/citizen/Certificates";
 import StaffDashboard from "./pages/staff/StaffDashboard";
 import Queue from "./pages/staff/Queue";
 import StaffApplicationDetail from "./pages/staff/StaffApplicationDetail";
@@ -54,7 +53,6 @@ const App = () => (<QueryClientProvider client={queryClient}>
               <Route path="/citizen/notifications" element={<Notifications />}/>
               <Route path="/citizen/announcements" element={<Announcements />}/>
               <Route path="/citizen/complaints" element={<Complaints />}/>
-              <Route path="/citizen/certificates" element={<Certificates />}/>
               <Route path="/citizen/settings" element={<StaffSettings />}/>
             </Route>
 

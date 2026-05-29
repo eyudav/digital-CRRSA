@@ -2,7 +2,6 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 const LABELS = {
     submitted: "Submitted",
-    under_review: "Under review",
     additional_documents_required: "Docs required",
     approved: "Approved",
     scheduled: "Scheduled",
@@ -12,7 +11,6 @@ const LABELS = {
 };
 const STYLES = {
     submitted: "bg-info/10 text-info border-info/20",
-    under_review: "bg-accent/15 text-accent-foreground border-accent/30",
     additional_documents_required: "bg-warning/15 text-warning-foreground border-warning/30",
     approved: "bg-success/15 text-success border-success/30",
     scheduled: "bg-primary/15 text-primary border-primary/30",

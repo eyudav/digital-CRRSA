@@ -76,6 +76,8 @@ create table if not exists announcements (
   title text not null,
   body text not null,
   posted_by bigint references users(id),
+  sub_city text,
+  woreda text,
   created_at timestamptz not null default now()
 );
 
@@ -117,6 +119,8 @@ alter table users drop constraint if exists users_phone_required;
 alter table users add constraint users_phone_required check (coalesce(trim(phone), '') <> '') not valid;
 alter table announcements add column if not exists category text not null default 'general';
 alter table announcements add column if not exists published boolean not null default true;
+alter table announcements add column if not exists sub_city text;
+alter table announcements add column if not exists woreda text;
 alter table users add column if not exists sub_city text;
 alter table users add column if not exists woreda text;
 alter table users add column if not exists phone text;

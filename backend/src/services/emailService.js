@@ -15,9 +15,3 @@ export async function sendEmail({ to, subject, html }) {
   );
 }
 
-export function buildVerificationEmail({ fullName, verificationLink }) {
-  return {
-    subject: "Verify your Digital CERCA account",
-    html: `<p>Hello ${fullName},</p><p>Please verify your email to activate your account:</p><p><a href="${verificationLink}">${verificationLink}</a></p>`,
-  };
-}

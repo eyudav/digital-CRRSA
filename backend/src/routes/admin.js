@@ -28,7 +28,7 @@ router.get("/users", requireRole("admin", "super_admin"), async (req, res, next)
     }
 
     const { rows } = await query(
-      `select id, full_name, email, role, sub_city, woreda, phone, address, email_verified, is_active, created_at
+      `select id, full_name, email, role, sub_city, woreda, phone, address, is_active, created_at
        from users
        ${where}
        order by created_at desc`,
@@ -66,9 +66,9 @@ router.post("/users", requireRole("admin", "super_admin"), async (req, res, next
     if (existing.rowCount) return res.status(409).json({ message: "Email already registered" });
     const passwordHash = await bcrypt.hash(password, 10);
     const { rows } = await query(
-      `insert into users (full_name, email, password_hash, role, sub_city, woreda, phone, address, email_verified, is_active)
-       values ($1, $2, $3, $4, $5, $6, $7, $8, true, true)
-       returning id, full_name, email, role, sub_city, woreda, phone, address, email_verified, is_active, created_at`,
+      `insert into users (full_name, email, password_hash, role, sub_city, woreda, phone, address, is_active)
+       values ($1, $2, $3, $4, $5, $6, $7, $8, true)
+       returning id, full_name, email, role, sub_city, woreda, phone, address, is_active, created_at`,
       [fullName, String(email).toLowerCase(), passwordHash, role, subCity || null, woreda || null, phone || null, address || null]
     );
     await logAudit({
@@ -141,7 +141,7 @@ router.patch("/users/:id", requireRole("admin", "super_admin"), async (req, res,
 
     params.push(targetId);
     const { rows } = await query(
-      `update users set ${updates.join(", ")} where id = $${i} returning id, full_name, email, role, sub_city, woreda, phone, address, email_verified, is_active, created_at`,
+      `update users set ${updates.join(", ")} where id = $${i} returning id, full_name, email, role, sub_city, woreda, phone, address, is_active, created_at`,
       params
     );
     await logAudit({
@@ -187,15 +187,20 @@ router.delete("/users/:id", requireRole("admin", "super_admin"), async (req, res
   }
 });
 
-router.get("/audit-logs", requireRole("admin", "super_admin"), async (_req, res, next) => {
+router.get("/audit-logs", requireRole("admin", "super_admin"), async (req, res, next) => {
   try {
-    const { rows } = await query(
-      `select l.id, l.actor_user_id, a.full_name as actor_name, l.action, l.entity_type, l.entity_id, l.details, l.created_at
+    const email = req.query.email || "";
+    let sql = `select l.id, l.actor_user_id, a.full_name as actor_name, a.email as actor_email, l.action, l.entity_type, l.entity_id, l.details, l.created_at
        from audit_logs l
-       left join users a on a.id = l.actor_user_id
-       order by l.created_at desc
-       limit 300`
-    );
+       left join users a on a.id = l.actor_user_id`;
+    const params = [];
+    if (email.trim()) {
+      sql += ` where a.email ilike $1`;
+      params.push(`%${email.trim()}%`);
+    }
+    sql += ` order by l.created_at desc limit 300`;
+
+    const { rows } = await query(sql, params);
     return res.json(rows);
   } catch (err) {
     return next(err);

@@ -25,7 +25,7 @@ const Queue = () => {
         if (filter === "all")
             return matchesQ;
         if (filter === "pending")
-            return matchesQ && ["submitted", "under_review", "additional_documents_required", "approved"].includes(a.status);
+          return matchesQ && ["submitted", "additional_documents_required", "approved"].includes(a.status);
         return matchesQ && a.status === filter;
     });
     return (<>

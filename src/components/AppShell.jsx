@@ -47,7 +47,6 @@ const CITIZEN_NAV = [
     { to: "/citizen/notifications", label: "Notifications", icon: Bell },
     { to: "/citizen/announcements", label: "Announcements", icon: Megaphone },
     { to: "/citizen/complaints", label: "Complaints", icon: MessageSquareWarning },
-    { to: "/citizen/certificates", label: "My certificates", icon: ScrollText },
     { to: "/citizen/settings", label: "Settings", icon: Settings },
 ];
 

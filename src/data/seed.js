@@ -106,7 +106,7 @@ export const SEED_APPLICATIONS = [
         citizenName: "Hanna Tesfaye",
         serviceId: "svc-birth",
         serviceName: "Birth Certificate",
-        status: "under_review",
+        status: "submitted",
         assignedStaffId: "staff-1",
         formData: { childName: "Noah Tesfaye", dateOfBirth: "2025-01-12", placeOfBirth: "Addis Ababa" },
         documents: [
@@ -116,7 +116,7 @@ export const SEED_APPLICATIONS = [
         appointment: { id: "ap1", applicationId: "app-1001", office: "Addis Ababa — Bole Sub-City", date: daysAgo(-4).slice(0, 10), timeSlot: "10:00 – 10:30", queueNumber: 24, status: "scheduled" },
         timeline: [
             { id: "t1", status: "submitted", message: "Application submitted", at: daysAgo(4), by: "Hanna Tesfaye" },
-            { id: "t2", status: "under_review", message: "Assigned to officer for review", at: daysAgo(3), by: "System" },
+            { id: "t2", status: "submitted", message: "Assigned to officer for review", at: daysAgo(3), by: "System" },
             { id: "t3", status: "comment", message: "Please ensure parent ID scan is legible.", at: daysAgo(1), by: "Officer Bekele" },
         ],
         submittedAt: daysAgo(4),
@@ -199,7 +199,7 @@ export const SEED_APPLICATIONS = [
         appointment: { id: "ap3", applicationId: "app-1005", office: "Addis Ababa — Yeka Sub-City", date: daysAgo(18).slice(0, 10), timeSlot: "09:30 – 10:00", queueNumber: 8, status: "completed" },
         timeline: [
             { id: "t10", status: "submitted", message: "Application submitted", at: daysAgo(23), by: "Hanna Tesfaye" },
-            { id: "t11", status: "under_review", message: "Application assigned for review", at: daysAgo(22), by: "System" },
+            { id: "t11", status: "submitted", message: "Application assigned for review", at: daysAgo(22), by: "System" },
             { id: "t12", status: "approved", message: "Application approved", at: daysAgo(19), by: "Officer Bekele" },
             { id: "t13", status: "ready_for_collection", message: "Certificate ready for collection", at: daysAgo(17), by: "System" },
             { id: "t14", status: "completed", message: "Certificate collected by citizen", at: daysAgo(16), by: "Front desk clerk" },
@@ -223,7 +223,7 @@ export const SEED_APPLICATIONS = [
         ],
         timeline: [
             { id: "t15", status: "submitted", message: "Application submitted", at: daysAgo(14), by: "Hanna Tesfaye" },
-            { id: "t16", status: "under_review", message: "Application is under review", at: daysAgo(13), by: "System" },
+            { id: "t16", status: "submitted", message: "Application is under review", at: daysAgo(13), by: "System" },
             { id: "t17", status: "rejected", message: "Application rejected due to missing sworn declaration.", at: daysAgo(11), by: "Officer Selam" },
         ],
         submittedAt: daysAgo(14),

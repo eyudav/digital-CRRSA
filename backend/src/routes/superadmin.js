@@ -29,15 +29,20 @@ router.patch("/settings", async (req, res, next) => {
   }
 });
 
-router.get("/audit-logs", async (_req, res, next) => {
+router.get("/audit-logs", async (req, res, next) => {
   try {
-    const { rows } = await query(
-      `select l.id, l.actor_user_id, a.full_name as actor_name, l.action, l.entity_type, l.entity_id, l.details, l.created_at
+    const email = req.query.email || "";
+    let sql = `select l.id, l.actor_user_id, a.full_name as actor_name, a.email as actor_email, l.action, l.entity_type, l.entity_id, l.details, l.created_at
        from audit_logs l
-       left join users a on a.id = l.actor_user_id
-       order by l.created_at desc
-       limit 500`
-    );
+       left join users a on a.id = l.actor_user_id`;
+    const params = [];
+    if (email.trim()) {
+      sql += ` where a.email ilike $1`;
+      params.push(`%${email.trim()}%`);
+    }
+    sql += ` order by l.created_at desc limit 500`;
+
+    const { rows } = await query(sql, params);
     return res.json(rows);
   } catch (err) {
     return next(err);

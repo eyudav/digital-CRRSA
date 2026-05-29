@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, ArrowRight, Check, FileUp, CalendarCheck, Trash2, ShieldAlert, BadgeInfo, UserCheck } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, FileUp, CalendarCheck, Trash2, ShieldAlert } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { SERVICES, OFFICES } from "@/data/seed";
 import { uid } from "@/data/store";
@@ -82,6 +82,14 @@ const Apply = () => {
                 woreda: user.woreda || "",
                 nationality: user.nationality || "Ethiopian",
             }));
+            if (user.subCity) {
+                const matchedOffice = OFFICES.find((o) =>
+                    o.toLowerCase().includes(user.subCity.toLowerCase())
+                );
+                if (matchedOffice) {
+                    setOffice(matchedOffice);
+                }
+            }
         }
     }, [user]);
 
@@ -224,6 +232,19 @@ const Apply = () => {
             if (!details.childDob) empties.childDob = "Required";
             if (!details.childPlaceOfBirth) empties.childPlaceOfBirth = "Required";
             if (!details.motherFullName) empties.motherFullName = "Required";
+            // mother's and father's phone numbers required and must match +251 format
+            if (!details.motherPhoneNumber) {
+                empties.motherPhoneNumber = "Required";
+            } else {
+                const p = String(details.motherPhoneNumber).replace(/\s+/g, "");
+                if (!/^\+251\d{9}$/.test(p)) empties.motherPhoneNumber = "Invalid phone format (+251...)";
+            }
+            if (!details.fatherPhoneNumber) {
+                empties.fatherPhoneNumber = "Required";
+            } else {
+                const p2 = String(details.fatherPhoneNumber).replace(/\s+/g, "");
+                if (!/^\+251\d{9}$/.test(p2)) empties.fatherPhoneNumber = "Invalid phone format (+251...)";
+            }
             if (!details.fatherFullName) empties.fatherFullName = "Required";
             if ((details.applicantRole === "Guardian" || details.applicantRole === "Proxy") && !details.guardianDocNo) {
                 empties.guardianDocNo = "Required for guardian/proxy";
@@ -256,7 +277,7 @@ const Apply = () => {
             if (!details.kebele) empties.kebele = "Required";
             if (!details.houseNumber) empties.houseNumber = "Required";
             if (!details.yearsLivedAtAddress) empties.yearsLivedAtAddress = "Required";
-            if (!details.residenceForm001No) empties.residenceForm001No = "Required";
+            // residenceForm001No removed per requirements
         } else if (slug === "residency-transfer") {
             if (!details.currentAddress) empties.currentAddress = "Required";
             if (!details.newAddress) empties.newAddress = "Required";
@@ -373,13 +394,7 @@ const Apply = () => {
         {/* STEP 0: DETAILS FORMS */}
         {step === 0 && (
             <div className="space-y-8">
-                {/* CORE IDENTITY PREFILL BADGE */}
-                <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 px-4 py-3 flex gap-3 items-center text-sm text-emerald-800 dark:text-emerald-300">
-                    <UserCheck className="h-5 w-5 text-emerald-600 shrink-0" />
-                    <div>
-                        <span className="font-semibold">Master Citizen Profile Prefilled:</span> Your authenticated identity record has automatically populated core fields below. Prefilled inputs are locked to preserve data integrity.
-                    </div>
-                </div>
+                {/* Prefill informational paragraph removed; prefill logic remains */}
 
                 {/* BIRTH REGISTRATION FORM */}
                 {slug === "birth-certificate" && (
@@ -487,8 +502,9 @@ const Apply = () => {
                             {errors.motherFullName && <p className="text-xs text-destructive">{errors.motherFullName}</p>}
                         </div>
                         <div className="space-y-1.5">
-                            <Label htmlFor="motherIdNumber">Mother's Residence ID Number</Label>
-                            <Input id="motherIdNumber" value={details.motherIdNumber || ""} onChange={(e) => setDetails({ ...details, motherIdNumber: e.target.value })} placeholder="e.g. ETH-9911-2233" />
+                            <Label htmlFor="motherPhoneNumber">Mother's Phone Number</Label>
+                            <Input id="motherPhoneNumber" value={details.motherPhoneNumber || ""} onChange={(e) => setDetails({ ...details, motherPhoneNumber: e.target.value })} placeholder="+251 ..." />
+                            {errors.motherPhoneNumber && <p className="text-xs text-destructive">{errors.motherPhoneNumber}</p>}
                         </div>
                         <div className="space-y-1.5">
                             <Label htmlFor="fatherFullName">Father's Full Name</Label>
@@ -496,8 +512,9 @@ const Apply = () => {
                             {errors.fatherFullName && <p className="text-xs text-destructive">{errors.fatherFullName}</p>}
                         </div>
                         <div className="space-y-1.5">
-                            <Label htmlFor="fatherIdNumber">Father's Residence ID Number</Label>
-                            <Input id="fatherIdNumber" value={details.fatherIdNumber || ""} onChange={(e) => setDetails({ ...details, fatherIdNumber: e.target.value })} placeholder="e.g. ETH-8811-2244" />
+                            <Label htmlFor="fatherPhoneNumber">Father's Phone Number</Label>
+                            <Input id="fatherPhoneNumber" value={details.fatherPhoneNumber || ""} onChange={(e) => setDetails({ ...details, fatherPhoneNumber: e.target.value })} placeholder="+251 ..." />
+                            {errors.fatherPhoneNumber && <p className="text-xs text-destructive">{errors.fatherPhoneNumber}</p>}
                         </div>
                         <div className="space-y-1.5">
                             <Label htmlFor="parentsMaritalStatus">Parents Marital Status</Label>
@@ -957,36 +974,7 @@ const Apply = () => {
                     </div>
                 )}
 
-                {/* GENERAL CORE PREFILL READONLY VIEW FOR DOUBLE CHECK */}
-                <div className="mt-8 rounded-2xl bg-secondary/10 border border-border p-5">
-                    <h4 className="font-semibold text-sm mb-4">Core Identity Prefill Verification</h4>
-                    <div className="grid gap-4 text-xs sm:grid-cols-3">
-                        <div>
-                            <span className="text-muted-foreground block">Full Name</span>
-                            <span className="font-semibold">{user?.fullName || "—"}</span>
-                        </div>
-                        <div>
-                            <span className="text-muted-foreground block">Sex / Sex Identity</span>
-                            <span className="font-semibold">{user?.sex || "—"}</span>
-                        </div>
-                        <div>
-                            <span className="text-muted-foreground block">Date of Birth</span>
-                            <span className="font-semibold">{user?.dateOfBirth || "—"}</span>
-                        </div>
-                        <div>
-                            <span className="text-muted-foreground block">Residence ID Number</span>
-                            <span className="font-semibold">{user?.residenceIdNumber || "NOT REGISTERED"}</span>
-                        </div>
-                        <div>
-                            <span className="text-muted-foreground block">Phone</span>
-                            <span className="font-semibold">{user?.phone || "—"}</span>
-                        </div>
-                        <div>
-                            <span className="text-muted-foreground block">Email</span>
-                            <span className="font-semibold">{user?.email || "—"}</span>
-                        </div>
-                    </div>
-                </div>
+                {/* Core identity prefill verification card removed (UI only). Prefill/population remains. */}
             </div>
         )}
 
@@ -1152,13 +1140,10 @@ const Apply = () => {
             </div>
             
             <div className="space-y-1.5">
-              <Label>Select Sub-City Office</Label>
-              <Select value={office} onValueChange={(v) => setOffice(v)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                      {OFFICES.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
-                  </SelectContent>
-              </Select>
+              <Label>Sub-City Office</Label>
+              <div className="rounded-xl border border-border bg-muted p-2.5 text-sm font-medium">
+                {office}
+              </div>
             </div>
             <div className="space-y-1.5">
               <Label>Select Appointment Date</Label>

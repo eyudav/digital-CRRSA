@@ -21,7 +21,7 @@ const Appointments = () => {
         enabled: !!user?.id,
         refetchOnWindowFocus: true,
     });
-    const withAppt = apps.filter((a) => a.appointment);
+    const withAppt = apps.filter((a) => a.appointment && ["approved", "scheduled", "ready_for_collection", "completed"].includes(a.status));
     const approvedAwaiting = apps.filter((a) => a.status === "approved" && !a.appointment);
 
     return (<>
