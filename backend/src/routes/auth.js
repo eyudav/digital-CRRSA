@@ -135,6 +135,13 @@ router.post("/login", async (req, res, next) => {
     const token = jwt.sign({ sub: details.id, role: details.role, email: details.email }, env.jwtSecret, {
       expiresIn: env.jwtExpiresIn,
     });
+    await logAudit({
+      actorUserId: user.id,
+      action: "AUTH_LOGIN",
+      entityType: "user",
+      entityId: String(user.id),
+      details: { role: details.role },
+    });
     return res.json({ token, user: details });
   } catch (err) {
     return next(err);
@@ -153,49 +160,97 @@ router.get("/me", requireAuth, async (req, res, next) => {
 
 router.patch("/profile", requireAuth, async (req, res, next) => {
   try {
-    const { fullName, phone, address, subCity, woreda, sex, dateOfBirth, motherName, fatherName, nationality, residenceIdNumber } = req.body || {};
-    const { rows } = await query(
-      `update users
-       set full_name = coalesce($1, full_name),
-           phone = coalesce($2, phone),
-           address = coalesce($3, address),
-           sub_city = coalesce($4, sub_city),
-           woreda = coalesce($5, woreda)
-       where id = $6
-       returning id`,
-      [fullName || null, phone || null, address || null, subCity || null, woreda || null, req.user.sub]
-    );
-    if (!rows.length) return res.status(404).json({ message: "User not found" });
-    await query(
-      `update citizen_profiles
-       set full_name = coalesce($1, full_name),
-           phone_number = coalesce($2, phone_number),
-           address = coalesce($3, address),
-           sub_city = coalesce($4, sub_city),
-           woreda = coalesce($5, woreda),
-           sex = coalesce($6, sex),
-           date_of_birth = coalesce($7, date_of_birth),
-           mother_name = coalesce($8, mother_name),
-           father_name = coalesce($9, father_name),
-           nationality = coalesce($10, nationality),
-           residence_id_number = coalesce($11, residence_id_number),
-           updated_at = now()
-       where user_id = $12`,
-      [
+    const {
+      fullName,
+      phone,
+      address,
+      subCity,
+      woreda,
+      sex,
+      dateOfBirth,
+      motherName,
+      fatherName,
+      nationality,
+      residenceIdNumber,
+    } = req.body || {};
+
+    const { rows: actorRows } = await query(`select role from users where id = $1`, [
+      req.user.sub,
+    ]);
+    const actorRole = actorRows[0]?.role;
+    if (!actorRole) return res.status(404).json({ message: "User not found" });
+
+    if (actorRole !== "citizen" && (subCity !== undefined || woreda !== undefined)) {
+      return res.status(403).json({
+        message: "Only citizens may update sub-city and woreda",
+      });
+    }
+
+    let userSql;
+    let userParams;
+    if (actorRole === "citizen") {
+      userSql = `update users
+         set full_name = coalesce($1, full_name),
+             phone = coalesce($2, phone),
+             address = coalesce($3, address),
+             sub_city = coalesce($4, sub_city),
+             woreda = coalesce($5, woreda)
+         where id = $6
+         returning id`;
+      userParams = [
         fullName || null,
         phone || null,
         address || null,
         subCity || null,
         woreda || null,
-        sex || null,
-        dateOfBirth ? new Date(dateOfBirth) : null,
-        motherName || null,
-        fatherName || null,
-        nationality || null,
-        residenceIdNumber || null,
-        req.user.sub
-      ]
-    );
+        req.user.sub,
+      ];
+    } else {
+      userSql = `update users
+         set full_name = coalesce($1, full_name),
+             phone = coalesce($2, phone),
+             address = coalesce($3, address)
+         where id = $4
+         returning id`;
+      userParams = [fullName || null, phone || null, address || null, req.user.sub];
+    }
+
+    const { rows } = await query(userSql, userParams);
+    if (!rows.length) return res.status(404).json({ message: "User not found" });
+
+    if (actorRole === "citizen") {
+      await query(
+        `update citizen_profiles
+         set full_name = coalesce($1, full_name),
+             phone_number = coalesce($2, phone_number),
+             address = coalesce($3, address),
+             sub_city = coalesce($4, sub_city),
+             woreda = coalesce($5, woreda),
+             sex = coalesce($6, sex),
+             date_of_birth = coalesce($7, date_of_birth),
+             mother_name = coalesce($8, mother_name),
+             father_name = coalesce($9, father_name),
+             nationality = coalesce($10, nationality),
+             residence_id_number = coalesce($11, residence_id_number),
+             updated_at = now()
+         where user_id = $12`,
+        [
+          fullName || null,
+          phone || null,
+          address || null,
+          subCity || null,
+          woreda || null,
+          sex || null,
+          dateOfBirth ? new Date(dateOfBirth) : null,
+          motherName || null,
+          fatherName || null,
+          nationality || null,
+          residenceIdNumber || null,
+          req.user.sub,
+        ],
+      );
+    }
+
     const details = await getUserDetails(req.user.sub);
     return res.json({ user: details });
   } catch (err) {

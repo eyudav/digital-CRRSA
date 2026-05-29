@@ -52,15 +52,15 @@ const Index = () => {
       <section className="relative overflow-hidden bg-hero text-primary-foreground">
         <div className="pointer-events-none absolute -right-32 -top-32 h-[480px] w-[480px] rounded-full bg-accent/15 blur-3xl"/>
         <div className="pointer-events-none absolute -bottom-32 left-1/4 h-[380px] w-[380px] rounded-full bg-primary-glow/20 blur-3xl"/>
-        <div className="container relative grid gap-12 py-20 md:py-28 lg:grid-cols-12">
-          <div className="lg:col-span-7 animate-fade-in">
-            <div className="inline-flex items-center gap-2 rounded-full border border-primary-foreground/15 bg-primary-foreground/5 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-primary-foreground/80">
+        <div className="container relative py-20 md:py-28">
+          <div className="mx-auto max-w-4xl animate-fade-in text-center md:text-left">
+            <div className="inline-flex items-center gap-2 rounded-full border border-primary-foreground/20 bg-primary-foreground/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-primary-foreground dark:text-white/90">
               <Sparkles className="h-3.5 w-3.5 text-accent"/> A new era of civil services
             </div>
-            <h1 className="mt-6 font-display text-5xl font-semibold leading-[1.05] tracking-tight text-balance md:text-6xl lg:text-7xl">
-              Civil registration, <span className="text-accent">reimagined</span> for every citizen.
+            <h1 className="mt-6 font-display text-5xl font-semibold leading-[1.05] tracking-tight text-balance text-primary-foreground dark:text-white md:text-6xl lg:text-7xl">
+              Civil registration, <span className="text-accent dark:text-emerald-300">reimagined</span> for every citizen.
             </h1>
-            <p className="mt-6 max-w-2xl text-lg text-primary-foreground/75">
+            <p className="mt-6 max-w-2xl text-lg text-primary-foreground/90 dark:text-white/85">
               Digital CRRSA brings birth, marriage, residency and identity services online. Apply, upload documents, book appointments and track your certificate - all from one secure place.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -79,39 +79,10 @@ const Index = () => {
                 </>
               )}
             </div>
-            <div className="mt-10 flex flex-wrap items-center gap-6 text-sm text-primary-foreground/65">
+            <div className="mt-10 flex flex-wrap items-center justify-center gap-6 text-sm text-primary-foreground/80 dark:text-white/75 md:justify-start">
               <div className="flex items-center gap-2"><BadgeCheck className="h-4 w-4 text-accent"/> Government-grade security</div>
               <div className="flex items-center gap-2"><Languages className="h-4 w-4 text-accent"/> English & Amharic-ready</div>
               <div className="flex items-center gap-2"><Building2 className="h-4 w-4 text-accent"/> Nationwide CRRSA offices</div>
-            </div>
-          </div>
-
-          {/* Mock dashboard card */}
-          <div className="lg:col-span-5">
-            <div className="relative animate-fade-in rounded-2xl border border-primary-foreground/10 bg-primary-foreground/5 p-5 backdrop-blur-md shadow-elegant">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs uppercase tracking-[0.18em] text-primary-foreground/60">Application</p>
-                  <p className="font-display text-lg">CRC-2025-001042</p>
-                </div>
-                <span className="rounded-full bg-accent/20 px-2.5 py-0.5 text-xs font-medium text-accent">Under review</span>
-              </div>
-              <div className="mt-5 space-y-3">
-                {[
-            { label: "Submitted", done: true },
-            { label: "Documents verified", done: true },
-            { label: "Officer review", done: false, current: true },
-            { label: "Ready for collection", done: false },
-        ].map((s, i) => (<div key={i} className="flex items-center gap-3">
-                    <span className={`grid h-7 w-7 place-items-center rounded-full text-xs font-semibold ${s.done ? "bg-accent text-accent-foreground" : s.current ? "border border-accent text-accent" : "border border-primary-foreground/20 text-primary-foreground/50"}`}>{i + 1}</span>
-                    <span className={`text-sm ${s.done ? "text-primary-foreground" : s.current ? "text-primary-foreground" : "text-primary-foreground/50"}`}>{s.label}</span>
-                  </div>))}
-              </div>
-              <div className="mt-5 rounded-xl bg-background/95 p-4 text-foreground">
-                <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Next appointment</p>
-                <p className="mt-1 font-display text-base font-semibold">Bole Sub-City · Friday 10:00</p>
-                <p className="mt-1 text-sm text-muted-foreground">Queue position #24 · ~25 min wait</p>
-              </div>
             </div>
           </div>
         </div>
@@ -173,12 +144,12 @@ const Index = () => {
       </section>
 
       {/* Trust band */}
-      <section id="trust" className="bg-hero py-20 text-primary-foreground">
+      <section id="trust" className="bg-hero py-20 text-primary-foreground dark:text-white">
         <div className="container grid items-center gap-10 lg:grid-cols-2">
           <div>
-            <p className="text-xs font-medium uppercase tracking-[0.18em] text-accent">Built for trust</p>
-            <h2 className="mt-2 font-display text-3xl font-semibold md:text-4xl">Security and accountability at every step.</h2>
-            <p className="mt-4 max-w-xl text-primary-foreground/75">Role-based access for citizens, staff and administrators. Every approval, document verification and certificate issuance is logged and auditable.</p>
+            <p className="text-xs font-medium uppercase tracking-[0.18em] text-accent dark:text-emerald-300">Built for trust</p>
+            <h2 className="mt-2 font-display text-3xl font-semibold text-primary-foreground dark:text-white md:text-4xl">Security and accountability at every step.</h2>
+            <p className="mt-4 max-w-xl text-primary-foreground/90 dark:text-white/85">Role-based access for citizens, staff and administrators. Every approval, document verification and certificate issuance is logged and auditable.</p>
             <div className="mt-6 flex flex-wrap gap-3">
               {user ? (
                 <Button asChild className="bg-accent text-accent-foreground hover:bg-accent/90"><Link to={user.role === 'citizen' ? '/citizen' : user.role === 'admin' ? '/staff/admin/users' : '/staff'}>Dashboard</Link></Button>
@@ -196,9 +167,9 @@ const Index = () => {
             { k: "100%", l: "Audit-logged actions" },
             { k: "24/7", l: "Online application" },
             { k: "<5d", l: "Average turnaround" },
-        ].map((stat) => (<div key={stat.l} className="rounded-2xl border border-primary-foreground/10 bg-primary-foreground/5 p-5 backdrop-blur">
-                <p className="font-display text-3xl font-semibold text-accent">{stat.k}</p>
-                <p className="mt-1 text-sm text-primary-foreground/70">{stat.l}</p>
+        ].map((stat) => (<div key={stat.l} className="rounded-2xl border border-primary-foreground/15 bg-primary-foreground/10 p-5 backdrop-blur dark:border-white/15 dark:bg-white/5">
+                <p className="font-display text-3xl font-semibold text-accent dark:text-emerald-300">{stat.k}</p>
+                <p className="mt-1 text-sm text-primary-foreground/90 dark:text-white/85">{stat.l}</p>
               </div>))}
           </div>
         </div>

@@ -12,35 +12,51 @@ import { ensureRuntimeSchema } from "../services/schemaGuard.js";
 
 const router = express.Router();
 
-router.post("/", requireAuth, requireRole("citizen"), async (req, res, next) => {
-  try {
-    const payload = applicationSchema.parse(req.body);
-    
-    // Check for duplicates
-    const existCheck = await query(
-      `select id from applications where citizen_id = $1 and service_type = $2 and status not in ('Completed', 'Rejected')`,
-      [req.user.sub, payload.serviceType]
-    );
-    if (existCheck.rowCount > 0) {
-      return res.status(409).json({ message: "This application has already been submitted." });
-    }
+router.post(
+  "/",
+  requireAuth,
+  requireRole("citizen"),
+  async (req, res, next) => {
+    try {
+      const payload = applicationSchema.parse(req.body);
 
-    const { rows } = await query(
-      `insert into applications (citizen_id, service_type, office_code, form_data, status, document_upload_status)
+      // Check for duplicates
+      const existCheck = await query(
+        `select id from applications where citizen_id = $1 and service_type = $2 and status not in ('Rejected')`,
+        [req.user.sub, payload.serviceType],
+      );
+      if (existCheck.rowCount > 0) {
+        return res
+          .status(409)
+          .json({ message: "This application has already been submitted." });
+      }
+
+      const { rows } = await query(
+        `insert into applications (citizen_id, service_type, office_code, form_data, status, document_upload_status)
        values ($1, $2, $3, $4, 'Submitted', 'NOT_UPLOADED')
        returning *`,
-      [req.user.sub, payload.serviceType, payload.officeCode, payload.formData]
-    );
-    return res.status(201).json(rows[0]);
-  } catch (err) {
-    return next(err);
-  }
-});
+        [
+          req.user.sub,
+          payload.serviceType,
+          payload.officeCode,
+          payload.formData,
+        ],
+      );
+      return res.status(201).json(rows[0]);
+    } catch (err) {
+      return next(err);
+    }
+  },
+);
 
-router.get("/my", requireAuth, requireRole("citizen"), async (req, res, next) => {
-  try {
-    const { rows } = await query(
-      `select a.*,
+router.get(
+  "/my",
+  requireAuth,
+  requireRole("citizen"),
+  async (req, res, next) => {
+    try {
+      const { rows } = await query(
+        `select a.*,
               ap_sub.queue_number as appt_queue_number,
               ap_sub.office_code as appt_office_code,
               ap_sub.slot_date as appt_slot_date,
@@ -57,13 +73,14 @@ router.get("/my", requireAuth, requireRole("citizen"), async (req, res, next) =>
        ) ap_sub on true
        where a.citizen_id = $1
        order by a.created_at desc`,
-      [req.user.sub]
-    );
-    return res.json(rows);
-  } catch (err) {
-    return next(err);
-  }
-});
+        [req.user.sub],
+      );
+      return res.json(rows);
+    } catch (err) {
+      return next(err);
+    }
+  },
+);
 
 router.get("/:id", requireAuth, async (req, res, next) => {
   try {
@@ -79,14 +96,18 @@ router.get("/:id", requireAuth, async (req, res, next) => {
        from applications a
        join users u on u.id = a.citizen_id
        where a.id = $1`,
-      [id]
+      [id],
     );
     if (!appRows.length) {
       return res.status(404).json({ message: "Application not found" });
     }
     const row = appRows[0];
-    const isCitizen = req.user.role === "citizen" && Number(req.user.sub) === Number(row.citizen_id);
-    const isStaffSide = ["staff", "admin", "super_admin"].includes(req.user.role);
+    const isCitizen =
+      req.user.role === "citizen" &&
+      Number(req.user.sub) === Number(row.citizen_id);
+    const isStaffSide = ["staff", "admin", "super_admin"].includes(
+      req.user.role,
+    );
     if (!isCitizen && !isStaffSide) {
       return res.status(403).json({ message: "Forbidden" });
     }
@@ -98,12 +119,18 @@ router.get("/:id", requireAuth, async (req, res, next) => {
        from application_documents
        where application_id = $1
        order by created_at`,
-      [id]
+      [id],
     );
     const docRows = docRowsRaw.map((d) => ({
       ...d,
-      optimized_url: optimizedCloudinaryUrl(d.cloudinary_public_id, d.mime_type),
-      download_url: cloudinaryDownloadUrl(d.cloudinary_public_id, d.original_file_name || d.file_name),
+      optimized_url: optimizedCloudinaryUrl(
+        d.cloudinary_public_id,
+        d.mime_type,
+      ),
+      download_url: cloudinaryDownloadUrl(
+        d.cloudinary_public_id,
+        d.original_file_name || d.file_name,
+      ),
     }));
 
     const { rows: histRows } = await query(
@@ -112,7 +139,7 @@ router.get("/:id", requireAuth, async (req, res, next) => {
        left join users u on u.id = h.changed_by
        where h.application_id = $1
        order by h.changed_at asc`,
-      [id]
+      [id],
     );
 
     const { rows: apptRows } = await query(
@@ -121,7 +148,7 @@ router.get("/:id", requireAuth, async (req, res, next) => {
        from appointments ap
        join appointment_slots s on s.id = ap.slot_id
        where ap.application_id = $1`,
-      [id]
+      [id],
     );
 
     return res.json({
@@ -146,12 +173,14 @@ router.post(
       const appId = Number(req.params.id);
       const files = req.files || [];
       if (!files.length) {
-        return res.status(400).json({ message: "At least one document is required" });
+        return res
+          .status(400)
+          .json({ message: "At least one document is required" });
       }
 
       const appCheck = await query(
         `select id from applications where id = $1 and citizen_id = $2`,
-        [appId, req.user.sub]
+        [appId, req.user.sub],
       );
       if (!appCheck.rowCount) {
         return res.status(404).json({ message: "Application not found" });
@@ -175,11 +204,14 @@ router.post(
             uploaded.secureUrl,
             uploaded.publicId,
             uploaded.format,
-          ]
+          ],
         );
       });
       await Promise.all(inserts);
-      await query(`update applications set document_upload_status = 'UPLOADED' where id = $1`, [appId]);
+      await query(
+        `update applications set document_upload_status = 'UPLOADED' where id = $1`,
+        [appId],
+      );
 
       return res.status(201).json({
         message: "Documents uploaded and validated",
@@ -188,7 +220,7 @@ router.post(
     } catch (err) {
       return next(err);
     }
-  }
+  },
 );
 
 export default router;

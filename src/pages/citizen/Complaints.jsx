@@ -16,9 +16,12 @@ const schema = z.object({
     message: z.string().trim().min(10, "Tell us more").max(1000),
 });
 const TONE = {
-    pending: "bg-warning/15 text-warning-foreground",
-    in_progress: "bg-info/10 text-info",
-    resolved: "bg-success/10 text-success",
+    pending:
+      "bg-amber-500/15 text-amber-900 border border-amber-500/30 dark:bg-amber-500/20 dark:text-amber-100 dark:border-amber-400/40",
+    in_progress:
+      "bg-sky-500/15 text-sky-900 border border-sky-500/30 dark:bg-sky-500/20 dark:text-sky-100 dark:border-sky-400/40",
+    resolved:
+      "bg-emerald-500/15 text-emerald-900 border border-emerald-500/30 dark:bg-emerald-500/20 dark:text-emerald-100 dark:border-emerald-400/40",
 };
 const Complaints = () => {
     const { user } = useAuth();

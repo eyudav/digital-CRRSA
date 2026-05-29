@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -52,15 +52,15 @@
     --chart-4: 200 80% 44%;
     --chart-5: 0 72% 51%;
 
-    /* Sidebar */
-    --sidebar-background: 224 14% 10%;
-    --sidebar-foreground: 220 14% 90%;
-    --sidebar-primary: 158 60% 40%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 224 12% 16%;
-    --sidebar-accent-foreground: 220 14% 96%;
-    --sidebar-border: 224 12% 18%;
-    --sidebar-ring: 158 60% 40%;
+    /* Sidebar (light theme) */
+    --sidebar-background: 220 13% 96%;
+    --sidebar-foreground: 224 12% 12%;
+    --sidebar-primary: 158 60% 24%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 224 12% 96%;
+    --sidebar-accent-foreground: 224 12% 12%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 158 60% 24%;
   }
 
   .dark {
@@ -91,7 +91,7 @@
     --success: 152 50% 44%;
     --success-foreground: 0 0% 100%;
     --warning: 38 85% 55%;
-    --warning-foreground: 38 80% 12%;
+    --warning-foreground: 38 85% 88%;
     --info: 200 75% 50%;
     --info-foreground: 0 0% 100%;
 
@@ -122,34 +122,64 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    font-family:
+      "Inter",
+      system-ui,
+      -apple-system,
+      sans-serif;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 }
 
 @layer utilities {
   /* Brand gradient for hero sections */
   .bg-hero {
-    background: linear-gradient(135deg, hsl(158 60% 20%) 0%, hsl(224 14% 12%) 60%, hsl(224 14% 10%) 100%);
+    background: linear-gradient(
+      135deg,
+      hsl(158 60% 20%) 0%,
+      hsl(224 14% 12%) 60%,
+      hsl(224 14% 10%) 100%
+    );
   }
   .dark .bg-hero {
-    background: linear-gradient(135deg, hsl(158 50% 14%) 0%, hsl(224 14% 6%) 60%, hsl(224 14% 4%) 100%);
+    background: linear-gradient(
+      135deg,
+      hsl(158 50% 14%) 0%,
+      hsl(224 14% 6%) 60%,
+      hsl(224 14% 4%) 100%
+    );
   }
 
   /* Soft cream/neutral page background */
   .bg-cream-grad {
-    background: linear-gradient(180deg, hsl(var(--background)) 0%, hsl(220 14% 95%) 100%);
+    background: linear-gradient(
+      180deg,
+      hsl(var(--background)) 0%,
+      hsl(220 14% 95%) 100%
+    );
   }
   .dark .bg-cream-grad {
-    background: linear-gradient(180deg, hsl(var(--background)) 0%, hsl(224 14% 7%) 100%);
+    background: linear-gradient(
+      180deg,
+      hsl(var(--background)) 0%,
+      hsl(224 14% 7%) 100%
+    );
   }
 
   /* Emerald gradient for icon containers */
   .bg-emerald-grad {
-    background: linear-gradient(135deg, hsl(158 60% 30%) 0%, hsl(158 55% 22%) 100%);
+    background: linear-gradient(
+      135deg,
+      hsl(158 60% 30%) 0%,
+      hsl(158 55% 22%) 100%
+    );
   }
   .dark .bg-emerald-grad {
-    background: linear-gradient(135deg, hsl(158 50% 36%) 0%, hsl(158 45% 28%) 100%);
+    background: linear-gradient(
+      135deg,
+      hsl(158 50% 36%) 0%,
+      hsl(158 45% 28%) 100%
+    );
   }
 
   /* Primary glow for decorative blurs */

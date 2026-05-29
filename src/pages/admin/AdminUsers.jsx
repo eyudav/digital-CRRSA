@@ -5,25 +5,42 @@ import { ContentCard } from "@/components/ContentCard";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { apiJson } from "@/lib/api";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
-import { Eye, Pencil, UserX, Search } from "lucide-react";
+import { Eye, UserX, UserCheck, Search } from "lucide-react";
+import { ADDIS_SUBCITIES, getWoredasForSubCity } from "@/data/addisLocations";
 
-const INITIAL = {
+const STAFF_INITIAL = {
   fullName: "",
   email: "",
   password: "",
   role: "staff",
+  subCity: "",
+  woreda: "",
+  phone: "",
+  address: "",
+};
+
+const ADMIN_INITIAL = {
+  fullName: "",
+  email: "",
+  password: "",
+  role: "admin",
   subCity: "",
   woreda: "",
   phone: "",
@@ -40,9 +57,9 @@ function UserRoleColumn({
   search,
   onSearchChange,
   onView,
-  onEdit,
   onDeactivate,
-  canEditCitizen,
+  onActivate,
+  canManageAccount,
   currentUserId,
 }) {
   const filtered = useMemo(() => {
@@ -52,7 +69,7 @@ function UserRoleColumn({
       (u) =>
         (u.full_name || "").toLowerCase().includes(q) ||
         (u.email || "").toLowerCase().includes(q) ||
-        String(u.id).includes(q)
+        String(u.id).includes(q),
     );
   }, [users, search]);
 
@@ -74,12 +91,18 @@ function UserRoleColumn({
         </div>
       </div>
       <div className="max-h-[480px] flex-1 overflow-y-auto p-3">
-        {isLoading && <p className="p-4 text-sm text-muted-foreground">Loading…</p>}
+        {isLoading && (
+          <p className="p-4 text-sm text-muted-foreground">Loading…</p>
+        )}
         {isError && (
-          <p className="p-4 text-sm text-destructive">{error?.message || "Failed to load."}</p>
+          <p className="p-4 text-sm text-destructive">
+            {error?.message || "Failed to load."}
+          </p>
         )}
         {!isLoading && !isError && filtered.length === 0 && (
-          <p className="p-4 text-center text-sm text-muted-foreground">No users match.</p>
+          <p className="p-4 text-center text-sm text-muted-foreground">
+            No users match.
+          </p>
         )}
         <ul className="space-y-2">
           {filtered.map((u) => (
@@ -90,10 +113,15 @@ function UserRoleColumn({
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <p className="truncate font-medium">{u.full_name}</p>
-                  <p className="truncate text-xs text-muted-foreground">{u.email}</p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {u.email}
+                  </p>
                   <div className="mt-2 flex flex-wrap gap-1">
                     {u.is_active ? (
-                      <Badge variant="outline" className="border-success/30 bg-success/10 text-success">
+                      <Badge
+                        variant="outline"
+                        className="border-success/30 bg-success/10 text-success"
+                      >
                         Active
                       </Badge>
                     ) : (
@@ -103,27 +131,39 @@ function UserRoleColumn({
                 </div>
               </div>
               <div className="mt-3 flex flex-wrap gap-1.5">
-                <Button variant="outline" size="sm" className="h-8" onClick={() => onView(u)}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8"
+                  onClick={() => onView(u)}
+                >
                   <Eye className="mr-1 h-3 w-3" />
                   View
                 </Button>
-                {(canEditCitizen || u.role !== "citizen") && (
-                  <Button variant="outline" size="sm" className="h-8" onClick={() => onEdit(u)}>
-                    <Pencil className="mr-1 h-3 w-3" />
-                    Edit
-                  </Button>
-                )}
-                {u.is_active && Number(u.id) !== Number(currentUserId) && (
+                {canManageAccount(u) && !u.is_active && (
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-8 text-destructive hover:bg-destructive/10"
-                    onClick={() => onDeactivate(u)}
+                    className="h-8 text-success hover:bg-success/10"
+                    onClick={() => onActivate(u)}
                   >
-                    <UserX className="mr-1 h-3 w-3" />
-                    Deactivate
+                    <UserCheck className="mr-1 h-3 w-3" />
+                    Activate
                   </Button>
                 )}
+                {canManageAccount(u) &&
+                  u.is_active &&
+                  Number(u.id) !== Number(currentUserId) && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 text-destructive hover:bg-destructive/10"
+                      onClick={() => onDeactivate(u)}
+                    >
+                      <UserX className="mr-1 h-3 w-3" />
+                      Deactivate
+                    </Button>
+                  )}
               </div>
             </li>
           ))}
@@ -137,158 +177,239 @@ export default function AdminUsers() {
   const { user } = useAuth();
   const qc = useQueryClient();
   const isSuper = user?.role === "super_admin";
-  const [form, setForm] = useState(INITIAL);
+  const isAdmin = user?.role === "admin";
+
+  const [staffForm, setStaffForm] = useState(STAFF_INITIAL);
+  const [adminForm, setAdminForm] = useState(ADMIN_INITIAL);
   const [qCitizen, setQCitizen] = useState("");
   const [qStaff, setQStaff] = useState("");
   const [qAdmin, setQAdmin] = useState("");
   const [viewUser, setViewUser] = useState(null);
-  const [editUser, setEditUser] = useState(null);
 
   const { data: citizens = [], ...citizensMeta } = useQuery({
     queryKey: ["admin", "users", "citizen"],
     queryFn: () => apiJson("/api/admin/users?role=citizen"),
-    enabled: isSuper,
+    enabled: isAdmin,
   });
 
   const { data: staff = [], ...staffMeta } = useQuery({
     queryKey: ["admin", "users", "staff"],
     queryFn: () => apiJson("/api/admin/users?role=staff"),
-    enabled: !!user,
+    enabled: isAdmin,
   });
 
   const { data: adminsOnly = [], ...adminsMeta } = useQuery({
     queryKey: ["admin", "users", "admin"],
     queryFn: () => apiJson("/api/admin/users?role=admin"),
-    enabled: !!user,
-  });
-
-  const { data: superOnly = [], ...superMeta } = useQuery({
-    queryKey: ["admin", "users", "super_admin"],
-    queryFn: () => apiJson("/api/admin/users?role=super_admin"),
     enabled: isSuper,
   });
 
-  const adminRoster = useMemo(() => {
-    const a = [...adminsOnly, ...(isSuper ? superOnly : [])];
-    const byId = new Map();
-    a.forEach((u) => byId.set(u.id, u));
-    return Array.from(byId.values()).sort((x, y) => new Date(y.created_at) - new Date(x.created_at));
-  }, [adminsOnly, superOnly, isSuper]);
-
-  const adminsLoading = adminsMeta.isLoading || (isSuper && superMeta.isLoading);
-  const adminsError = adminsMeta.error || superMeta.error;
-
-  const [logEmailSearch, setLogEmailSearch] = useState("");
-
-  const { data: logs = [] } = useQuery({
-    queryKey: ["admin", "audit-logs", logEmailSearch],
-    queryFn: () => apiJson(`/api/admin/audit-logs?email=${encodeURIComponent(logEmailSearch)}`),
-  });
+  const adminRoster = useMemo(
+    () =>
+      [...adminsOnly].sort(
+        (x, y) => new Date(y.created_at) - new Date(x.created_at),
+      ),
+    [adminsOnly],
+  );
 
   const invalidateUsers = () => {
     qc.invalidateQueries({ queryKey: ["admin", "users"] });
   };
 
   const createMutation = useMutation({
-    mutationFn: () =>
+    mutationFn: (body) =>
       apiJson("/api/admin/users", {
         method: "POST",
-        body: form,
+        body,
       }),
     onSuccess: () => {
-      setForm(INITIAL);
+      if (isSuper) setAdminForm(ADMIN_INITIAL);
+      else setStaffForm(STAFF_INITIAL);
       invalidateUsers();
-      qc.invalidateQueries({ queryKey: ["admin", "audit-logs"] });
       toast({ title: "User created" });
     },
-    onError: (e) => toast({ title: "Create failed", description: e.message, variant: "destructive" }),
+    onError: (e) =>
+      toast({
+        title: "Create failed",
+        description: e.message,
+        variant: "destructive",
+      }),
   });
 
   const deactivateMutation = useMutation({
     mutationFn: (id) => apiJson(`/api/admin/users/${id}`, { method: "DELETE" }),
     onSuccess: () => {
       invalidateUsers();
-      qc.invalidateQueries({ queryKey: ["admin", "audit-logs"] });
       toast({ title: "User deactivated" });
     },
-    onError: (e) => toast({ title: "Failed", description: e.message, variant: "destructive" }),
+    onError: (e) =>
+      toast({
+        title: "Failed",
+        description: e.message,
+        variant: "destructive",
+      }),
   });
 
-  const patchMutation = useMutation({
-    mutationFn: ({ id, body }) => apiJson(`/api/admin/users/${id}`, { method: "PATCH", body }),
+  const activateMutation = useMutation({
+    mutationFn: (id) =>
+      apiJson(`/api/admin/users/${id}/activate`, { method: "POST" }),
     onSuccess: () => {
-      setEditUser(null);
       invalidateUsers();
-      qc.invalidateQueries({ queryKey: ["admin", "audit-logs"] });
-      toast({ title: "User updated" });
+      toast({ title: "User activated" });
     },
-    onError: (e) => toast({ title: "Update failed", description: e.message, variant: "destructive" }),
+    onError: (e) =>
+      toast({
+        title: "Failed",
+        description: e.message,
+        variant: "destructive",
+      }),
   });
+
+  const superCanManage = (u) => u.role === "admin";
+  const adminCanManage = (u) => ["staff", "citizen"].includes(u.role);
 
   return (
     <>
       <PageHeader
-        title={isSuper ? "Manage users" : "Admin & staff management"}
+        title={isSuper ? "Manage administrators" : "Staff & citizen management"}
         description={
           isSuper
-            ? "Citizens, staff, and administrators in one place. Search, review, edit, and deactivate accounts."
-            : "Create staff accounts and manage operational users in your jurisdiction."
+            ? "Create and manage city-wide administrator accounts. Staff and citizens are managed by admins."
+            : "Create staff accounts and manage staff and citizen access in your jurisdiction."
         }
       />
 
       <div className="mb-6">
-        <ContentCard title="Create user">
+        <ContentCard title={isSuper ? "Create admin" : "Create staff"}>
           <div className="mt-2 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <div className="space-y-1.5">
-            <Label>Full name</Label>
-            <Input value={form.fullName} onChange={(e) => setForm((f) => ({ ...f, fullName: e.target.value }))} />
+            <div className="space-y-1.5">
+              <Label>Full name</Label>
+              <Input
+                value={isSuper ? adminForm.fullName : staffForm.fullName}
+                onChange={(e) =>
+                  isSuper
+                    ? setAdminForm((f) => ({ ...f, fullName: e.target.value }))
+                    : setStaffForm((f) => ({ ...f, fullName: e.target.value }))
+                }
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Email</Label>
+              <Input
+                value={isSuper ? adminForm.email : staffForm.email}
+                onChange={(e) =>
+                  isSuper
+                    ? setAdminForm((f) => ({ ...f, email: e.target.value }))
+                    : setStaffForm((f) => ({ ...f, email: e.target.value }))
+                }
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Password</Label>
+              <Input
+                type="password"
+                value={isSuper ? adminForm.password : staffForm.password}
+                onChange={(e) =>
+                  isSuper
+                    ? setAdminForm((f) => ({ ...f, password: e.target.value }))
+                    : setStaffForm((f) => ({ ...f, password: e.target.value }))
+                }
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Sub-city</Label>
+              <Select
+                value={isSuper ? adminForm.subCity : staffForm.subCity}
+                onValueChange={(v) =>
+                  isSuper
+                    ? setAdminForm((f) => ({ ...f, subCity: v }))
+                    : setStaffForm((f) => ({ ...f, subCity: v, woreda: "" }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select sub-city" />
+                </SelectTrigger>
+                <SelectContent>
+                  {ADDIS_SUBCITIES.map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {s}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {isAdmin && (
+              <div className="space-y-1.5">
+                <Label>Woreda</Label>
+                <Select
+                  value={staffForm.woreda}
+                  onValueChange={(v) =>
+                    setStaffForm((f) => ({ ...f, woreda: v }))
+                  }
+                  disabled={!staffForm.subCity}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select woreda" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {getWoredasForSubCity(staffForm.subCity).map((w) => (
+                      <SelectItem key={w} value={w}>
+                        {w}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            <div className="space-y-1.5">
+              <Label>Phone</Label>
+              <Input
+                value={isSuper ? adminForm.phone : staffForm.phone}
+                onChange={(e) =>
+                  isSuper
+                    ? setAdminForm((f) => ({ ...f, phone: e.target.value }))
+                    : setStaffForm((f) => ({ ...f, phone: e.target.value }))
+                }
+              />
+            </div>
           </div>
-          <div className="space-y-1.5">
-            <Label>Email</Label>
-            <Input value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Password</Label>
-            <Input
-              type="password"
-              value={form.password}
-              onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Role</Label>
-            <Select value={form.role} onValueChange={(v) => setForm((f) => ({ ...f, role: v }))}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="staff">Staff</SelectItem>
-                {isSuper && <SelectItem value="admin">Admin</SelectItem>}
-                {isSuper && <SelectItem value="super_admin">Super Admin</SelectItem>}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label>Sub-city</Label>
-            <Input value={form.subCity} onChange={(e) => setForm((f) => ({ ...f, subCity: e.target.value }))} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Phone</Label>
-            <Input value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} />
-          </div>
-        </div>
-        <Button
-          className="mt-4"
-          onClick={() => createMutation.mutate()}
-          disabled={createMutation.isPending || !form.subCity.trim() || !form.phone.trim()}
-        >
-          Create user
-        </Button>
+          <Button
+            className="mt-4"
+            onClick={() =>
+              createMutation.mutate(isSuper ? adminForm : staffForm)
+            }
+            disabled={
+              createMutation.isPending ||
+              (isSuper
+                ? !adminForm.subCity.trim() || !adminForm.phone.trim()
+                : !staffForm.subCity.trim() ||
+                  !staffForm.woreda.trim() ||
+                  !staffForm.phone.trim())
+            }
+          >
+            Create user
+          </Button>
         </ContentCard>
       </div>
 
-      <div className="grid gap-5 xl:grid-cols-3">
-        {isSuper ? (
+      {isSuper ? (
+        <UserRoleColumn
+          title="Administrators"
+          toneClass="border-l-4 border-l-violet-500"
+          users={adminRoster}
+          isLoading={adminsMeta.isLoading}
+          isError={adminsMeta.isError}
+          error={adminsMeta.error}
+          search={qAdmin}
+          onSearchChange={setQAdmin}
+          onView={setViewUser}
+          onDeactivate={(u) => deactivateMutation.mutate(u.id)}
+          onActivate={(u) => activateMutation.mutate(u.id)}
+          canManageAccount={superCanManage}
+          currentUserId={user?.id}
+        />
+      ) : (
+        <div className="grid gap-5 xl:grid-cols-2">
           <UserRoleColumn
             title="Citizens"
             toneClass="border-l-4 border-l-teal-500"
@@ -299,78 +420,28 @@ export default function AdminUsers() {
             search={qCitizen}
             onSearchChange={setQCitizen}
             onView={setViewUser}
-            onEdit={setEditUser}
             onDeactivate={(u) => deactivateMutation.mutate(u.id)}
-            canEditCitizen={isSuper}
+            onActivate={(u) => activateMutation.mutate(u.id)}
+            canManageAccount={adminCanManage}
             currentUserId={user?.id}
           />
-        ) : (
-          <section className="rounded-2xl border border-dashed border-border bg-secondary/20 p-6 text-sm text-muted-foreground">
-            <h2 className="font-display text-lg font-semibold text-foreground">Citizens</h2>
-            <p className="mt-2">
-              Citizen directory and edits are restricted to super administrators. Contact a super admin for
-              citizen account changes.
-            </p>
-          </section>
-        )}
-
-        <UserRoleColumn
-          title="Staff"
-          toneClass="border-l-4 border-l-amber-500"
-          users={staff}
-          isLoading={staffMeta.isLoading}
-          isError={staffMeta.isError}
-          error={staffMeta.error}
-          search={qStaff}
-          onSearchChange={setQStaff}
-          onView={setViewUser}
-          onEdit={setEditUser}
-          onDeactivate={(u) => deactivateMutation.mutate(u.id)}
-          canEditCitizen={isSuper}
-          currentUserId={user?.id}
-        />
-
-        <UserRoleColumn
-          title="Admins"
-          toneClass="border-l-4 border-l-violet-500"
-          users={adminRoster}
-          isLoading={adminsLoading}
-          isError={adminsMeta.isError || superMeta.isError}
-          error={adminsError}
-          search={qAdmin}
-          onSearchChange={setQAdmin}
-          onView={setViewUser}
-          onEdit={setEditUser}
-          onDeactivate={(u) => deactivateMutation.mutate(u.id)}
-          canEditCitizen={isSuper}
-          currentUserId={user?.id}
-        />
-      </div>
-
-      <section className="mt-8">
-        <ContentCard title="Audit logs">
-          <div className="mb-4 max-w-sm">
-            <Input
-              type="email"
-              placeholder="Search by actor email..."
-              value={logEmailSearch}
-              onChange={(e) => setLogEmailSearch(e.target.value)}
-              className="w-full text-sm"
-            />
-          </div>
-          <div className="mt-1 max-h-64 space-y-3 overflow-y-auto pr-2">
-          {logs.slice(0, 50).map((l) => (
-            <div key={l.id} className="rounded-lg border border-border p-3 text-sm">
-              <p className="font-medium">{l.action}</p>
-              <p className="text-muted-foreground">
-                {l.actor_name || "System"} · {l.entity_type} #{l.entity_id || "-"} ·{" "}
-                {new Date(l.created_at).toLocaleString()}
-              </p>
-            </div>
-          ))}
-          </div>
-        </ContentCard>
-      </section>
+          <UserRoleColumn
+            title="Staff"
+            toneClass="border-l-4 border-l-amber-500"
+            users={staff}
+            isLoading={staffMeta.isLoading}
+            isError={staffMeta.isError}
+            error={staffMeta.error}
+            search={qStaff}
+            onSearchChange={setQStaff}
+            onView={setViewUser}
+            onDeactivate={(u) => deactivateMutation.mutate(u.id)}
+            onActivate={(u) => activateMutation.mutate(u.id)}
+            canManageAccount={adminCanManage}
+            currentUserId={user?.id}
+          />
+        </div>
+      )}
 
       <Dialog open={!!viewUser} onOpenChange={(o) => !o && setViewUser(null)}>
         <DialogContent>
@@ -389,7 +460,9 @@ export default function AdminUsers() {
               </div>
               <div>
                 <dt className="text-xs text-muted-foreground">Role</dt>
-                <dd className="capitalize">{viewUser.role?.replace("_", " ")}</dd>
+                <dd className="capitalize">
+                  {viewUser.role?.replace("_", " ")}
+                </dd>
               </div>
               <div>
                 <dt className="text-xs text-muted-foreground">Status</dt>
@@ -401,12 +474,16 @@ export default function AdminUsers() {
                   <dd>{viewUser.phone}</dd>
                 </div>
               )}
-              {(viewUser.sub_city || viewUser.woreda) && (
+              {viewUser.sub_city && (
                 <div>
-                  <dt className="text-xs text-muted-foreground">Location</dt>
-                  <dd>
-                    {[viewUser.sub_city, viewUser.woreda].filter(Boolean).join(" · ")}
-                  </dd>
+                  <dt className="text-xs text-muted-foreground">Sub-city</dt>
+                  <dd>{viewUser.sub_city}</dd>
+                </div>
+              )}
+              {viewUser.woreda && (
+                <div>
+                  <dt className="text-xs text-muted-foreground">Woreda</dt>
+                  <dd>{viewUser.woreda}</dd>
                 </div>
               )}
               {viewUser.address && (
@@ -419,90 +496,6 @@ export default function AdminUsers() {
           )}
         </DialogContent>
       </Dialog>
-
-      <Dialog open={!!editUser} onOpenChange={(o) => !o && setEditUser(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit user</DialogTitle>
-          </DialogHeader>
-          {editUser && (
-            <EditUserForm
-              key={editUser.id}
-              userRow={editUser}
-              isSuper={isSuper}
-              onSave={(body) => patchMutation.mutate({ id: editUser.id, body })}
-              onCancel={() => setEditUser(null)}
-              pending={patchMutation.isPending}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
     </>
-  );
-}
-
-function EditUserForm({ userRow, isSuper, onSave, onCancel, pending }) {
-  const [fullName, setFullName] = useState(userRow.full_name || "");
-  const [email, setEmail] = useState(userRow.email || "");
-  const [phone, setPhone] = useState(userRow.phone || "");
-  const [subCity, setSubCity] = useState(userRow.sub_city || "");
-  const [woreda, setWoreda] = useState(userRow.woreda || "");
-  const [address, setAddress] = useState(userRow.address || "");
-
-  const citizenOnly = userRow.role === "citizen";
-  const showLocation = !citizenOnly || isSuper;
-
-  return (
-    <div className="space-y-3">
-      <div className="space-y-1.5">
-        <Label>Full name</Label>
-        <Input value={fullName} onChange={(e) => setFullName(e.target.value)} />
-      </div>
-      <div className="space-y-1.5">
-        <Label>Email</Label>
-        <Input value={email} onChange={(e) => setEmail(e.target.value)} />
-      </div>
-      <div className="space-y-1.5">
-        <Label>Phone</Label>
-        <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
-      </div>
-      {showLocation && (
-        <>
-          <div className="space-y-1.5">
-            <Label>Sub-city</Label>
-            <Input value={subCity} onChange={(e) => setSubCity(e.target.value)} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Woreda</Label>
-            <Input value={woreda} onChange={(e) => setWoreda(e.target.value)} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Address</Label>
-            <Input value={address} onChange={(e) => setAddress(e.target.value)} />
-          </div>
-        </>
-      )}
-      <DialogFooter className="gap-2 sm:gap-0">
-        <Button type="button" variant="outline" onClick={onCancel}>
-          Cancel
-        </Button>
-        <Button
-          type="button"
-          onClick={() =>
-            onSave({
-              fullName: fullName.trim(),
-              email: email.trim(),
-              phone: phone.trim() || null,
-              subCity: showLocation ? subCity.trim() || null : undefined,
-              woreda: showLocation ? woreda.trim() || null : undefined,
-              address: showLocation ? address.trim() || null : undefined,
-            })
-          }
-          disabled={pending || !fullName.trim() || !email.trim()}
-        >
-          Save
-        </Button>
-      </DialogFooter>
-    </div>
   );
 }

@@ -6,10 +6,12 @@ const API_TO_UI = {
   Scheduled: "scheduled",
   Rejected: "rejected",
   "Ready for Collection": "ready_for_collection",
-  Completed: "completed",
+  // 'Completed' removed: final state is 'Ready for Collection'
 };
 
-const UI_TO_API = Object.fromEntries(Object.entries(API_TO_UI).map(([a, b]) => [b, a]));
+const UI_TO_API = Object.fromEntries(
+  Object.entries(API_TO_UI).map(([a, b]) => [b, a]),
+);
 
 export function apiStatusToUi(status) {
   if (!status) return "submitted";

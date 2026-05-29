@@ -29,17 +29,36 @@ router.patch("/settings", async (req, res, next) => {
   }
 });
 
+const LOG_TYPE_FILTERS = {
+  auth: ["AUTH_%"],
+  profile: ["AUTH_CHANGE_PASSWORD", "AUTH_REGISTER"],
+  admin: ["ADMIN_%"],
+  application: ["APPLICATION_%", "STAFF_%"],
+  user: ["ADMIN_CREATE_USER", "ADMIN_UPDATE_USER", "ADMIN_DEACTIVATE_USER", "ADMIN_ACTIVATE_USER"],
+};
+
 router.get("/audit-logs", async (req, res, next) => {
   try {
     const email = req.query.email || "";
+    const type = String(req.query.type || "all").toLowerCase();
     let sql = `select l.id, l.actor_user_id, a.full_name as actor_name, a.email as actor_email, l.action, l.entity_type, l.entity_id, l.details, l.created_at
        from audit_logs l
        left join users a on a.id = l.actor_user_id`;
     const params = [];
+    const clauses = [];
     if (email.trim()) {
-      sql += ` where a.email ilike $1`;
       params.push(`%${email.trim()}%`);
+      clauses.push(`a.email ilike $${params.length}`);
     }
+    const patterns = LOG_TYPE_FILTERS[type];
+    if (patterns?.length) {
+      const orParts = patterns.map((p) => {
+        params.push(p);
+        return `l.action ilike $${params.length}`;
+      });
+      clauses.push(`(${orParts.join(" or ")})`);
+    }
+    if (clauses.length) sql += ` where ${clauses.join(" and ")}`;
     sql += ` order by l.created_at desc limit 500`;
 
     const { rows } = await query(sql, params);

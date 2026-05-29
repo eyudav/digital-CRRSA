@@ -65,6 +65,14 @@ export function AuthProvider({ children }) {
           },
         });
       } catch (e) {
+        const apiErrors = e.data?.errors;
+        if (Array.isArray(apiErrors) && apiErrors.length) {
+          return {
+            ok: false,
+            message: apiErrors.map((x) => x.message).join(" "),
+            fieldErrors: apiErrors,
+          };
+        }
         return { ok: false, message: e.message || "Registration failed" };
       }
       const signedIn = await login(data.email, data.password);

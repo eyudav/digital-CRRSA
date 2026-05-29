@@ -2,7 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 
 export function KpiCard({ label, value, icon: Icon, toneClass }) {
   return (
-    <Card className="rounded-2xl border-border shadow-soft overflow-hidden">
+    <Card className="overflow-hidden rounded-[20px] border-zinc-200/90 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.05)] dark:border-zinc-800 dark:bg-zinc-950/80">
       <CardContent className="p-5">
         <div className="flex items-center justify-between">
           <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">{label}</p>

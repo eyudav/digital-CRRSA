@@ -10,11 +10,12 @@ import { Logo } from "@/components/Logo";
 import { toast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ADDIS_SUBCITIES, getWoredasForSubCity } from "@/data/addisLocations";
+import { passwordFieldSchema, PASSWORD_HINT } from "@/lib/passwordValidation";
 
 const schema = z.object({
     fullName: z.string().trim().min(2, "Enter your full name").max(100),
     email: z.string().trim().email("Enter a valid email").max(255),
-    password: z.string().min(8, "At least 8 characters").max(100),
+    password: passwordFieldSchema.max(100),
     phone: z.string().trim().min(3, "Phone is required").max(30),
     address: z.string().trim().max(200).optional().or(z.literal("")),
     subCity: z.string().trim().min(2, "Select sub-city"),
@@ -59,6 +60,13 @@ const Register = () => {
             residenceIdNumber: d.residenceIdNumber || undefined,
         });
         if (!res.ok) {
+            if (res.fieldErrors?.length) {
+                const next = {};
+                res.fieldErrors.forEach(({ path, message }) => {
+                    if (path && message) next[path] = message;
+                });
+                setErrors((prev) => ({ ...prev, ...next }));
+            }
             toast({ title: "Registration failed", description: res.message, variant: "destructive" });
             return;
         }
@@ -91,7 +99,8 @@ const Register = () => {
                         </div>
                         <div className="space-y-1.5">
                             <Label htmlFor="password">Password</Label>
-                            <Input id="password" type="password" value={form.password} onChange={(e) => update("password", e.target.value)} />
+                            <Input id="password" type="password" autoComplete="new-password" value={form.password} onChange={(e) => update("password", e.target.value)} />
+                            <p className="text-xs text-muted-foreground">{PASSWORD_HINT}</p>
                             {errors.password && <p className="text-xs text-destructive">{errors.password}</p>}
                         </div>
 

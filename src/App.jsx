@@ -25,58 +25,149 @@ import Queue from "./pages/staff/Queue";
 import StaffApplicationDetail from "./pages/staff/StaffApplicationDetail";
 import StaffAnnouncements from "./pages/staff/StaffAnnouncements";
 import StaffComplaints from "./pages/staff/StaffComplaints";
-import StaffSettings from "./pages/staff/StaffSettings";
+import SettingsProfile from "./pages/SettingsProfile";
+import SettingsPassword from "./pages/SettingsPassword";
 import AdminUsers from "./pages/admin/AdminUsers";
+import AdminSystemLogs from "./pages/admin/AdminSystemLogs";
 import SuperAdminDashboard from "./pages/superadmin/SuperAdminDashboard";
 import SuperAdminSettings from "./pages/superadmin/SuperAdminSettings";
 import SuperAdminLogs from "./pages/superadmin/SuperAdminLogs";
 const queryClient = new QueryClient();
-const App = () => (<QueryClientProvider client={queryClient}>
+const App = () => (
+  <QueryClientProvider client={queryClient}>
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <TooltipProvider>
         <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <Routes>
-            <Route path="/" element={<Index />}/>
-            <Route path="/login" element={<Login />}/>
-            <Route path="/register" element={<Register />}/>
+        <Sonner />
+        <BrowserRouter>
+          <AuthProvider>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
 
-            <Route element={<RequireRole role="citizen"><AppShell /></RequireRole>}>
-              <Route path="/citizen" element={<CitizenDashboard />}/>
-              <Route path="/citizen/services" element={<Services />}/>
-              <Route path="/citizen/apply/:slug" element={<Apply />}/>
-              <Route path="/citizen/applications" element={<Applications />}/>
-              <Route path="/citizen/applications/:id" element={<ApplicationDetail />}/>
-              <Route path="/citizen/appointments" element={<Appointments />}/>
-              <Route path="/citizen/notifications" element={<Notifications />}/>
-              <Route path="/citizen/announcements" element={<Announcements />}/>
-              <Route path="/citizen/complaints" element={<Complaints />}/>
-              <Route path="/citizen/settings" element={<StaffSettings />}/>
-            </Route>
+              <Route
+                element={
+                  <RequireRole role="citizen">
+                    <AppShell />
+                  </RequireRole>
+                }
+              >
+                <Route path="/citizen" element={<CitizenDashboard />} />
+                <Route path="/citizen/services" element={<Services />} />
+                <Route path="/citizen/apply/:slug" element={<Apply />} />
+                <Route
+                  path="/citizen/applications"
+                  element={<Applications />}
+                />
+                <Route
+                  path="/citizen/applications/:id"
+                  element={<ApplicationDetail />}
+                />
+                <Route
+                  path="/citizen/appointments"
+                  element={<Appointments />}
+                />
+                <Route
+                  path="/citizen/notifications"
+                  element={<Notifications />}
+                />
+                <Route
+                  path="/citizen/announcements"
+                  element={<Announcements />}
+                />
+                <Route path="/citizen/complaints" element={<Complaints />} />
+                <Route path="/citizen/settings" element={<SettingsProfile />} />
+                <Route
+                  path="/citizen/settings/password"
+                  element={<SettingsPassword />}
+                />
+              </Route>
 
-            <Route element={<RequireRole role={["staff", "admin", "super_admin"]}><AppShell /></RequireRole>}>
-              <Route path="/staff" element={<RequireRole role={["staff", "super_admin"]}><StaffDashboard /></RequireRole>} />
-              <Route path="/staff/queue" element={<RequireRole role={["staff", "super_admin"]}><Queue /></RequireRole>} />
-              <Route path="/staff/queue/:id" element={<RequireRole role={["staff", "super_admin"]}><StaffApplicationDetail /></RequireRole>} />
-              <Route path="/staff/announcements" element={<RequireRole role={["staff", "super_admin"]}><StaffAnnouncements /></RequireRole>} />
-              <Route path="/staff/complaints" element={<StaffComplaints />}/>
-              <Route path="/staff/settings" element={<StaffSettings />}/>
-              <Route path="/staff/admin/users" element={<RequireRole role={["admin", "super_admin"]}><AdminUsers /></RequireRole>} />
-            </Route>
+              <Route
+                element={
+                  <RequireRole role={["staff", "admin", "super_admin"]}>
+                    <AppShell />
+                  </RequireRole>
+                }
+              >
+                <Route
+                  path="/staff"
+                  element={
+                    <RequireRole role={["staff", "super_admin"]}>
+                      <StaffDashboard />
+                    </RequireRole>
+                  }
+                />
+                <Route
+                  path="/staff/queue"
+                  element={
+                    <RequireRole role={["staff", "super_admin"]}>
+                      <Queue />
+                    </RequireRole>
+                  }
+                />
+                <Route
+                  path="/staff/queue/:id"
+                  element={
+                    <RequireRole role={["staff", "super_admin"]}>
+                      <StaffApplicationDetail />
+                    </RequireRole>
+                  }
+                />
+                <Route
+                  path="/staff/announcements"
+                  element={
+                    <RequireRole role={["staff", "super_admin"]}>
+                      <StaffAnnouncements />
+                    </RequireRole>
+                  }
+                />
+                <Route path="/staff/complaints" element={<StaffComplaints />} />
+                <Route path="/staff/settings" element={<SettingsProfile />} />
+                <Route
+                  path="/staff/settings/password"
+                  element={<SettingsPassword />}
+                />
+                <Route
+                  path="/staff/admin/users"
+                  element={
+                    <RequireRole role={["admin", "super_admin"]}>
+                      <AdminUsers />
+                    </RequireRole>
+                  }
+                />
+                <Route
+                  path="/staff/admin/logs"
+                  element={
+                    <RequireRole role="admin">
+                      <AdminSystemLogs />
+                    </RequireRole>
+                  }
+                />
+              </Route>
 
-            <Route element={<RequireRole role={["super_admin"]}><AppShell /></RequireRole>}>
-              <Route path="/super-admin" element={<SuperAdminDashboard />} />
-              <Route path="/super-admin/settings" element={<SuperAdminSettings />} />
-              <Route path="/super-admin/logs" element={<SuperAdminLogs />} />
-            </Route>
+              <Route
+                element={
+                  <RequireRole role={["super_admin"]}>
+                    <AppShell />
+                  </RequireRole>
+                }
+              >
+                <Route path="/super-admin" element={<SuperAdminDashboard />} />
+                <Route
+                  path="/super-admin/settings"
+                  element={<SuperAdminSettings />}
+                />
+                <Route path="/super-admin/logs" element={<SuperAdminLogs />} />
+              </Route>
 
-            <Route path="*" element={<NotFound />}/>
-          </Routes>
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
     </ThemeProvider>
-  </QueryClientProvider>);
+  </QueryClientProvider>
+);
 export default App;

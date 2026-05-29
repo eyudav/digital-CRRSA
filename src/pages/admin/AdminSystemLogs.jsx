@@ -1,30 +1,30 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { PageHeader } from "@/components/AppShell";
+import { PageHeader } from "@/components/PageHeader";
 import { apiJson } from "@/lib/api";
 import { Input } from "@/components/ui/input";
 
-const SuperAdminLogs = () => {
+export default function AdminSystemLogs() {
   const [logEmailSearch, setLogEmailSearch] = useState("");
-  const [logType, setLogType] = useState("all");
+
   const { data: logs = [] } = useQuery({
-    queryKey: ["superadmin", "audit-logs", logEmailSearch, logType],
+    queryKey: ["admin", "audit-logs", logEmailSearch],
     queryFn: () =>
       apiJson(
-        `/api/super-admin/audit-logs?email=${encodeURIComponent(logEmailSearch)}&type=${encodeURIComponent(logType)}`,
+        `/api/admin/audit-logs?email=${encodeURIComponent(logEmailSearch)}`,
       ),
   });
 
   return (
     <>
       <PageHeader
-        eyebrow="Super Admin"
+        eyebrow="Administration"
         title="System Logs"
-        description="Centralized audit log for application events."
+        description="Activity by staff and citizens in your jurisdiction (admin and super admin actions are excluded)."
       />
 
-      <div className="mt-6 flex gap-3 max-w-sm">
+      <div className="mt-6 max-w-sm">
         <Input
           type="email"
           placeholder="Search logs by actor email..."
@@ -32,18 +32,6 @@ const SuperAdminLogs = () => {
           onChange={(e) => setLogEmailSearch(e.target.value)}
           className="w-full text-sm"
         />
-        <select
-          value={logType}
-          onChange={(e) => setLogType(e.target.value)}
-          className="text-sm rounded-md border border-border bg-background p-2"
-        >
-          <option value="all">All</option>
-          <option value="auth">Auth</option>
-          <option value="profile">Profile</option>
-          <option value="admin">Admin</option>
-          <option value="application">Application</option>
-          <option value="user">User</option>
-        </select>
       </div>
 
       <div className="mt-4 overflow-hidden rounded-2xl border border-border bg-card shadow-soft">
@@ -73,7 +61,8 @@ const SuperAdminLogs = () => {
                     {log.action}
                   </td>
                   <td className="px-6 py-4">
-                    {log.entity_type} {log.entity_id ? `#${log.entity_id}` : ""}
+                    {log.entity_type}{" "}
+                    {log.entity_id ? `#${log.entity_id}` : ""}
                   </td>
                 </tr>
               ))}
@@ -93,6 +82,4 @@ const SuperAdminLogs = () => {
       </div>
     </>
   );
-};
-
-export default SuperAdminLogs;
+}
